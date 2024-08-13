@@ -30,3 +30,16 @@ func (s *Storage) Get(key string) (val any, exists bool) {
 	val, exists = s.data[key]
 	return
 }
+
+func (s *Storage) GetAll() []any {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	res := make([]any, 0, len(s.data))
+
+	for _, v := range s.data {
+		res = append(res, v)
+	}
+
+	return res
+}

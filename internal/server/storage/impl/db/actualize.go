@@ -21,7 +21,7 @@ func (s *svc) Actualize(ctx context.Context) error {
 
 		con, err := goose.OpenDBWithDriver(
 			"pgx",
-			config.DatabaseURI,
+			config.DatabaseDsn,
 		)
 		if err != nil {
 			return err

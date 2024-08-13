@@ -9,87 +9,90 @@ import (
 type configKey string
 
 const (
-	RunAddrEnv           = configKey("RUN_ADDRESS")
-	DatabaseURIEnv       = configKey("DATABASE_URI")
-	AccrualSystemAddrEnv = configKey("ACCRUAL_SYSTEM_ADDRESS")
-	CryptoKeyEnv         = configKey("CRYPTO_KEY")
-	JwtSecretKeyEnv      = configKey("JWT_KEY")
+	AddrEnv            = configKey("ADDRESS")
+	StoreIntervalEnv   = configKey("STORE_INTERVAL")
+	FileStoragePathEnv = configKey("FILE_STORAGE_PATH")
+	RestoreEnv         = configKey("RESTORE")
+	DatabaseDsnEnv     = configKey("DATABASE_DSN")
+	HashKeyEnv         = configKey("KEY")
 )
 
 var (
-	RunAddr           string
-	DatabaseURI       string
-	AccrualSystemAddr string
-	CryptoKey         string
-	JwtSecretKey      string
+	Addr            string
+	StoreInterval   int64
+	FileStoragePath string
+	Restore         bool
+	DatabaseDsn     string
+	HashKey         string
 )
 
 func Setup(logger logger.Logger) {
-	flag.StringVar(&RunAddr, "a", "localhost:8080", "runAddr")
-	flag.StringVar(&DatabaseURI, "d", "", "dbUri")
-	flag.StringVar(&AccrualSystemAddr, "r", "", "accrual system addr")
-	flag.StringVar(&CryptoKey, "k", "examplekey123456", "crypto key")
-	flag.StringVar(&JwtSecretKey, "j", "examplekey123456", "jwt crypto key")
+	flag.StringVar(&Addr, "a", "localhost:8080", "server addr")
+	flag.Int64Var(&StoreInterval, "i", 300, "store interval")
+	flag.StringVar(&FileStoragePath, "f", "", "file storage path")
+	flag.BoolVar(&Restore, "r", true, "restore flag")
+	flag.StringVar(&DatabaseDsn, "d", "", "database data source name")
+	flag.StringVar(&HashKey, "k", "", "hash key")
 
 	flag.Parse()
 
-	runAddr, err := GetConfigString(RunAddrEnv)
+	addr, err := GetConfigString(AddrEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
 			"msg", err,
 		)
 	} else {
-		RunAddr = runAddr
+		Addr = addr
 	}
 
-	databaseURI, err := GetConfigString(DatabaseURIEnv)
+	storeInterval, err := GetConfigInt64(StoreIntervalEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
 			"msg", err,
 		)
 	} else {
-		DatabaseURI = databaseURI
+		StoreInterval = storeInterval
 	}
 
-	accrualSystemAddr, err := GetConfigString(AccrualSystemAddrEnv)
+	fileStoragePath, err := GetConfigString(FileStoragePathEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
 			"msg", err,
 		)
 	} else {
-		AccrualSystemAddr = accrualSystemAddr
+		FileStoragePath = fileStoragePath
 	}
 
-	cryptoKey, err := GetConfigString(CryptoKeyEnv)
+	restore, err := GetConfigBool(RestoreEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
 			"msg", err,
 		)
 	} else {
-		CryptoKey = cryptoKey
+		Restore = restore
 	}
 
-	jwtSecretKey, err := GetConfigString(JwtSecretKeyEnv)
+	databaseDsn, err := GetConfigString(DatabaseDsnEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
 			"msg", err,
 		)
 	} else {
-		JwtSecretKey = jwtSecretKey
+		DatabaseDsn = databaseDsn
 	}
 
-	//TODO printing envs lol
-	logger.Infow(
-		"config",
-		"runAddr", RunAddr,
-		"dbUri", DatabaseURI,
-		"accrual system addr", AccrualSystemAddr,
-		"crypto key", CryptoKey,
-		"jwt crypto key", JwtSecretKey,
-	)
+	hashKey, err := GetConfigString(HashKeyEnv)
+	if err != nil {
+		logger.Errorw(
+			"can't get env",
+			"msg", err,
+		)
+	} else {
+		HashKey = hashKey
+	}
 }

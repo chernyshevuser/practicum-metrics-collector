@@ -21,7 +21,7 @@ type svc struct {
 func New(ctx context.Context, logger logger.Logger) (svc storage.Svc, err error) {
 	dbPool, err := pgxpool.New(
 		ctx,
-		config.DatabaseURI,
+		config.DatabaseDsn,
 	)
 
 	if err != nil {

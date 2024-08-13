@@ -7,9 +7,11 @@ import (
 )
 
 func (s *svc) UpdateGauge(ctx context.Context, m storage.GaugeMetric) error {
-	panic("")
+	s.gaugeStorage.Set(m.ID, m)
+	return nil
 }
 
 func (s *svc) UpdateCounter(ctx context.Context, m storage.CounterMetric) error {
-	panic("")
+	s.counterStorage.Set(m.ID, m)
+	return nil
 }

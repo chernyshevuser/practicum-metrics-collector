@@ -1,5 +1,7 @@
 package memorystorage
 
 func (s *svc) Close() error {
-	panic("")
+	s.logger.Info("goodbye from db-svc")
+
+	return nil
 }
