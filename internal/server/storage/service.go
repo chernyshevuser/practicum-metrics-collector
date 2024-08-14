@@ -20,9 +20,9 @@ type Storage interface {
 	UpdateGauge(ctx context.Context, m GaugeMetric) error
 	UpdateCounter(ctx context.Context, m CounterMetric) error
 
-	GetGauge(ctx context.Context, id string) (GaugeMetric, error)
-	GetCounter(ctx context.Context, id string) (CounterMetric, error)
-	GetAll(ctx context.Context) ([]GaugeMetric, []CounterMetric, error)
+	GetGauge(ctx context.Context, id string) (*GaugeMetric, error)
+	GetCounter(ctx context.Context, id string) (*CounterMetric, error)
+	GetAll(ctx context.Context) (*[]GaugeMetric, *[]CounterMetric, error)
 
 	Ping(ctx context.Context) error
 	Close() error

@@ -21,11 +21,11 @@ const (
 
 // TODO check method GET/POST
 func SetupRouter(api handler.API, router *mux.Router, logger logger.Logger) {
-	router.HandleFunc(UpdateMetricPath, middleware.Accept(nil, logger)).Methods(http.MethodPost)
+	router.HandleFunc(UpdateMetricPath, middleware.Accept(api.UpdateMetric, logger)).Methods(http.MethodPost)
 	router.HandleFunc(UpdateMetricJSONPath, middleware.Accept(nil, logger)).Methods(http.MethodPost)
 	router.HandleFunc(UpdateMetricsJSONPath, middleware.Accept(nil, logger)).Methods(http.MethodPost)
-	router.HandleFunc(GetMetricValuePath, middleware.Accept(nil, logger)).Methods(http.MethodGet)
+	router.HandleFunc(GetMetricValuePath, middleware.Accept(api.GetMetricValue, logger)).Methods(http.MethodGet)
 	router.HandleFunc(GetMetricValueJSONPath, middleware.Accept(nil, logger)).Methods(http.MethodGet)
-	router.HandleFunc(GetAllMetricsPath, middleware.Accept(nil, logger)).Methods(http.MethodGet)
+	router.HandleFunc(GetAllMetricsPath, middleware.Accept(api.GetAllMetrics, logger)).Methods(http.MethodGet)
 	router.HandleFunc(PingDB, middleware.Accept(nil, logger)).Methods(http.MethodGet)
 }

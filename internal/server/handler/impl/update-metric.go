@@ -2,7 +2,8 @@ package impl
 
 import (
 	"net/http"
-	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 func (a *api) UpdateMetric(w http.ResponseWriter, r *http.Request) error {
@@ -11,16 +12,16 @@ func (a *api) UpdateMetric(w http.ResponseWriter, r *http.Request) error {
 
 	ctx := r.Context()
 
-	vals := strings.Split(r.URL.String(), "/")
-	if len(vals) != 5 {
+	vars := mux.Vars(r)
+	metricTypeStr := vars["type"]
+	metricNameStr := vars["name"]
+	metricValueStr := vars["value"]
+
+	if len(metricTypeStr) == 0 || len(metricNameStr) == 0 || len(metricValueStr) == 0 {
 		status = http.StatusBadRequest
 		w.WriteHeader(status)
 		return nil
 	}
-
-	metricTypeStr := vals[2]
-	metricNameStr := vals[3]
-	metricValueStr := vals[4]
 
 	err := a.mc.UpdateMetric(ctx, metricTypeStr, metricNameStr, metricValueStr)
 	if err != nil {
