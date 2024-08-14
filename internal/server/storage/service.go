@@ -1,18 +1,22 @@
 package storage
 
-import "context"
+import (
+	"context"
+
+	"github.com/shopspring/decimal"
+)
 
 type CounterMetric struct {
 	ID    string
-	Delta int64
+	Delta decimal.Decimal
 }
 
 type GaugeMetric struct {
 	ID    string
-	Value float64
+	Value decimal.Decimal
 }
 
-type Svc interface {
+type Storage interface {
 	UpdateGauge(ctx context.Context, m GaugeMetric) error
 	UpdateCounter(ctx context.Context, m CounterMetric) error
 
@@ -21,7 +25,5 @@ type Svc interface {
 	GetAll(ctx context.Context) ([]GaugeMetric, []CounterMetric, error)
 
 	Ping(ctx context.Context) error
-	Actualize(ctx context.Context) error
-
 	Close() error
 }

@@ -1,11 +1,15 @@
 package db
 
-import "github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
+import (
+	"context"
 
-func (s *svc) UpdateGauge(m storage.GaugeMetric) error {
+	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
+)
+
+func (s *svc) UpdateGauge(ctx context.Context, m storage.GaugeMetric) error {
 	panic("")
 }
 
-func (s *svc) UpdateCounter(m storage.CounterMetric) error {
+func (s *svc) UpdateCounter(ctx context.Context, m storage.CounterMetric) error {
 	panic("")
 }

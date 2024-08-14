@@ -18,27 +18,30 @@ type svc struct {
 	logger logger.Logger
 }
 
-func New(ctx context.Context, logger logger.Logger) (svc storage.Svc, err error) {
+func New(ctx context.Context, logger logger.Logger) (storage.Storage, error) {
 	dbPool, err := pgxpool.New(
 		ctx,
 		config.DatabaseDsn,
 	)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to create dbPool: %w", err)
+		return nil, fmt.Errorf("failed to create dbPool: %v", err)
 	}
 
 	err = dbPool.Ping(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to ping postgreSQL: %w", err)
+		return nil, fmt.Errorf("failed to ping postgreSQL: %v", err)
 	}
 
-	panic("")
+	s := svc{
+		conn:   dbPool,
+		logger: logger,
+	}
 
-	// svc = &svc{
-	// 	conn:   dbPool,
-	// 	logger: logger,
-	// }
+	err = s.actualize(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("can't actualize db, reason: %v", err)
+	}
 
-	// return svc, nil
+	return &s, nil
 }

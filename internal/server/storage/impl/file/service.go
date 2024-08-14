@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
+	st "github.com/chernyshevuser/practicum-metrics-collector/tools/default-storage"
 	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
-	st "github.com/chernyshevuser/practicum-metrics-collector/tools/storage"
 )
 
 type svc struct {
@@ -14,7 +14,7 @@ type svc struct {
 	gaugeStorage   *st.Storage
 }
 
-func New(ctx context.Context, logger logger.Logger) (storage.Svc, error) {
+func New(ctx context.Context, logger logger.Logger) (storage.Storage, error) {
 	return &svc{
 		logger:         logger,
 		counterStorage: st.New[string](),

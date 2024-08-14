@@ -6,6 +6,7 @@ require (
 	github.com/gorilla/mux v1.8.1
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/pressly/goose/v3 v3.21.1
+	github.com/shopspring/decimal v1.3.1
 	github.com/test-go/testify v1.1.4
 	go.uber.org/zap v1.27.0
 )

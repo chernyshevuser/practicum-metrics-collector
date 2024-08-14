@@ -11,7 +11,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func (s *svc) Actualize(ctx context.Context) error {
+func (s *svc) actualize(ctx context.Context) error {
 	return s.conn.AcquireFunc(ctx, func(*pgxpool.Conn) error {
 		goose.SetBaseFS(files.Migrations)
 
