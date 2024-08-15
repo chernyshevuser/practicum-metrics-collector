@@ -4,7 +4,6 @@ import (
 	"sync"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/agent/business"
-	"github.com/chernyshevuser/practicum-metrics-collector/internal/agent/constants"
 	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 
 	"github.com/shopspring/decimal"
@@ -23,19 +22,24 @@ type svc struct {
 	pollCount decimal.Decimal
 	mu        *sync.Mutex
 
-	ch chan Metric
-	wg *sync.WaitGroup
+	closeCh chan struct{}
+	wg      *sync.WaitGroup
+
+	updateInterval int64
+	sendInterval   int64
 }
 
-func New(logger logger.Logger) business.Svc {
-
+func New(logger logger.Logger, updateInterval int64, sendInterval int64) business.Agent {
 	return &svc{
 		logger: logger,
 
 		pollCount: decimal.Decimal{},
 		mu:        &sync.Mutex{},
 
-		ch: make(chan Metric, constants.Sz),
-		wg: &sync.WaitGroup{},
+		closeCh: make(chan struct{}, 1),
+		wg:      &sync.WaitGroup{},
+
+		updateInterval: updateInterval,
+		sendInterval:   sendInterval,
 	}
 }

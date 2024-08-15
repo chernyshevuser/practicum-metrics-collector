@@ -9,8 +9,7 @@ const (
 	GaugeMT   MetricType = "gauge"
 )
 
-type Svc interface {
-	CollectMetrics(ctx context.Context)
-	SendMetrics(ctx context.Context)
+type Agent interface {
+	Run(ctx context.Context)
 	Close()
 }

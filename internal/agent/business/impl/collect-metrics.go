@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"context"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -12,7 +11,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (s *svc) CollectMetrics(ctx context.Context) {
+func (s *svc) collectMetrics() {
 	metrics := make([]Metric, 0, constants.MetricsCount)
 
 	s.mu.Lock()
