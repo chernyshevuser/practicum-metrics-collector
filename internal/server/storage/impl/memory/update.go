@@ -12,7 +12,7 @@ func (s *svc) Update(ctx context.Context, gaugeMetrics []storage.GaugeMetric, co
 	}
 
 	for _, m := range counterMetrics {
-		s.gaugeStorage.Set(m.ID, m)
+		s.counterStorage.Set(m.ID, m)
 	}
 
 	return nil

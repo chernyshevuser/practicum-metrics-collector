@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 	sugared "github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 )
 
@@ -45,7 +44,7 @@ func PanicMiddleware(next http.HandlerFunc, logger sugared.Logger) http.HandlerF
 	}
 }
 
-func DecompressMiddleware(next http.HandlerFunc, logger logger.Logger) http.HandlerFunc {
+func DecompressMiddleware(next http.HandlerFunc, logger sugared.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Content-Encoding") == "gzip" {
 			gz, err := gzip.NewReader(r.Body)
