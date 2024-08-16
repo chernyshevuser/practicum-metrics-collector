@@ -29,12 +29,15 @@ type GaugeMetric struct {
 	Value decimal.Decimal
 }
 
+type RawMetric struct {
+	ID    string
+	Type  string
+	Value string
+}
+
 type MetricsCollector interface {
-	UpdateMetric(ctx context.Context, metricType, metricName, metricVal string) error
-	UpdateMetricJSON() error
-	UpdateMetricsJSON() error
-	GetMetricValue(ctx context.Context, metricType, metricName string) (*decimal.Decimal, error)
-	GetMetricValueJSON() error
+	UpdateMetrics(ctx context.Context, metrics []RawMetric) error
+	GetMetricValue(ctx context.Context, metricType, metricName string) (val *decimal.Decimal, mType MetricType, err error)
 	GetAllMetrics(ctx context.Context) ([]CounterMetric, []GaugeMetric, error)
 	PingDB() error
 	Close()

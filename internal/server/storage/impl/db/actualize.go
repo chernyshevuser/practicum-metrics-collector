@@ -6,7 +6,7 @@ import (
 	files "github.com/chernyshevuser/practicum-metrics-collector"
 	"github.com/pressly/goose/v3"
 
-	"github.com/chernyshevuser/practicum-metrics-collector/tools/config"
+	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/config"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )

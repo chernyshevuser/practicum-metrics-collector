@@ -17,8 +17,7 @@ type GaugeMetric struct {
 }
 
 type Storage interface {
-	UpdateGauge(ctx context.Context, m GaugeMetric) error
-	UpdateCounter(ctx context.Context, m CounterMetric) error
+	Update(ctx context.Context, gaugeMetrics []GaugeMetric, counterMetrics []CounterMetric) error
 
 	GetGauge(ctx context.Context, id string) (*GaugeMetric, error)
 	GetCounter(ctx context.Context, id string) (*CounterMetric, error)

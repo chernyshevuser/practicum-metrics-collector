@@ -2,5 +2,5 @@ package constants
 
 const (
 	Sz           = 10
-	MetricsCount = 20
+	MetricsCount = 28
 )

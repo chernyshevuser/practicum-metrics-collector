@@ -1,5 +1,5 @@
 package impl
 
 func (s *svc) Close() {
-	panic("")
+	s.logger.Info("goodbye from business-svc")
 }

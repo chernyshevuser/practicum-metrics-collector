@@ -1,9 +1,12 @@
 package impl
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/business"
 	"github.com/gorilla/mux"
 )
 
@@ -23,7 +26,7 @@ func (a *api) GetMetricValue(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	val, err := a.mc.GetMetricValue(ctx, metricTypeStr, metricNameStr)
+	val, _, err := a.mc.GetMetricValue(ctx, metricTypeStr, metricNameStr)
 	if err != nil {
 		return fmt.Errorf("can't get metric val, reason: %v", err)
 	}
@@ -34,17 +37,91 @@ func (a *api) GetMetricValue(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
+	w.WriteHeader(status)
+
 	_, err = fmt.Fprint(w, val.String())
 	if err != nil {
 		return fmt.Errorf("can't write metric val to responseWriter, reason: %v", err)
 	}
 
-	w.WriteHeader(status)
 	return nil
 }
 
+type getMetricReq struct {
+	ID    string   `json:"id"`
+	MType string   `json:"type"`
+	Delta *int64   `json:"delta,omitempty"`
+	Value *float64 `json:"value,omitempty"`
+}
+
+type getMetricResp struct {
+	ID    string   `json:"id"`
+	MType string   `json:"type"`
+	Delta *int64   `json:"delta,omitempty"`
+	Value *float64 `json:"value,omitempty"`
+}
+
 func (a *api) GetMetricValueJSON(w http.ResponseWriter, r *http.Request) error {
-	panic("")
+	w.Header().Set("Content-Type", "application/json")
+	ctx := r.Context()
+
+	status := http.StatusOK
+
+	var buf bytes.Buffer
+	if _, err := buf.ReadFrom(r.Body); err != nil {
+		status = http.StatusBadRequest
+		w.WriteHeader(status)
+		return nil
+	}
+
+	var req getMetricReq
+	if err := json.Unmarshal(buf.Bytes(), &req); err != nil {
+		status = http.StatusBadRequest
+		w.WriteHeader(status)
+		return nil
+	}
+
+	val, mType, err := a.mc.GetMetricValue(ctx, req.MType, req.ID)
+	if err != nil {
+		return fmt.Errorf("can't get metric val, reason: %v", err)
+	}
+
+	if val == nil {
+		status = http.StatusNotFound
+		w.WriteHeader(status)
+		return nil
+	}
+
+	resp := getMetricResp{
+		ID:    req.ID,
+		MType: req.MType,
+	}
+
+	if mType == business.Counter {
+		valInt64 := val.IntPart()
+		resp.Delta = &valInt64
+	} else if mType == business.Gauge {
+		valFloat64 := val.InexactFloat64()
+		resp.Value = &valFloat64
+	} else {
+		a.logger.Errorw(
+			"unknown metric type",
+			"type", mType,
+		)
+		return fmt.Errorf("get unknown metric type from business")
+	}
+
+	respBytes, err := json.Marshal(resp)
+	if err != nil {
+		return err
+	}
+
+	if _, err = w.Write(respBytes); err != nil {
+		return err
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return nil
 }
 
 func (a *api) GetAllMetrics(w http.ResponseWriter, r *http.Request) error {

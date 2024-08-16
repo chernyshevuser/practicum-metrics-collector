@@ -3,7 +3,9 @@ package crypto
 import (
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -53,4 +55,10 @@ func Decrypt(key, cryptoText string) (string, error) {
 	stream.XORKeyStream(ciphertext, ciphertext)
 
 	return string(ciphertext), nil
+}
+
+func Sign(data []byte, key string) []byte {
+	h := hmac.New(sha256.New, []byte(key))
+	dst := h.Sum(data)
+	return dst
 }

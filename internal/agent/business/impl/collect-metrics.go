@@ -1,7 +1,6 @@
 package impl
 
 import (
-	"fmt"
 	"math/big"
 	"math/rand"
 	"runtime"
@@ -181,8 +180,6 @@ func (s *svc) getMetrics() []Metric {
 			},
 		}...,
 	)
-
-	fmt.Println("LEN OF METRICS = ", len(metrics))
 
 	return metrics
 }

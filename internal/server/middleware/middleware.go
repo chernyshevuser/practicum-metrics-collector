@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"compress/gzip"
 	"net/http"
 	"runtime/debug"
 
+	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 	sugared "github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 )
 
@@ -43,6 +45,23 @@ func PanicMiddleware(next http.HandlerFunc, logger sugared.Logger) http.HandlerF
 	}
 }
 
+func DecompressMiddleware(next http.HandlerFunc, logger logger.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Content-Encoding") == "gzip" {
+			gz, err := gzip.NewReader(r.Body)
+			if err != nil {
+				http.Error(w, "Failed to decompress request body", http.StatusBadRequest)
+				return
+			}
+			defer gz.Close()
+
+			r.Body = gz
+		}
+
+		next(w, r)
+	}
+}
+
 func ErrorMiddleware(next func(http.ResponseWriter, *http.Request) error, logger sugared.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if err := next(w, r); err != nil {
@@ -61,6 +80,7 @@ func Accept(f func(http.ResponseWriter, *http.Request) error, logger sugared.Log
 	middlewares := []func(next http.HandlerFunc, logger sugared.Logger) http.HandlerFunc{
 		PanicMiddleware,
 		LogMiddleware,
+		DecompressMiddleware,
 	}
 
 	prelude := ErrorMiddleware(f, logger)

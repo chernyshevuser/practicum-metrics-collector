@@ -8,7 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string) (*decimal.Decimal, error) {
+func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string) (val *decimal.Decimal, mType business.MetricType, err error) {
 	t := s.parseMetricType(metricType)
 
 	s.logger.Infow(
@@ -20,7 +20,7 @@ func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string)
 
 	//case unknown
 	if t == business.Unknown {
-		return nil, fmt.Errorf("given metric type(%s) in unknown", metricType)
+		return nil, "", fmt.Errorf("given metric type(%s) in unknown", metricType)
 	}
 
 	//case counter
@@ -32,14 +32,14 @@ func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string)
 				"msg", "can't get counter metric val",
 				"reason", err,
 			)
-			return nil, fmt.Errorf("can't get counter metric val from db, reason: %v", err)
+			return nil, "", fmt.Errorf("can't get counter metric val from db, reason: %v", err)
 		}
 
 		if m == nil {
-			return nil, nil
+			return nil, "", nil
 		}
 
-		return &m.Delta, nil
+		return &m.Delta, business.Counter, nil
 	}
 
 	//case gauge
@@ -50,18 +50,14 @@ func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string)
 			"msg", "can't get gauge metric val",
 			"reason", err,
 		)
-		return nil, fmt.Errorf("can't get gauge metric val from db, reason: %v", err)
+		return nil, "", fmt.Errorf("can't get gauge metric val from db, reason: %v", err)
 	}
 
 	if m == nil {
-		return nil, nil
+		return nil, "", nil
 	}
 
-	return &m.Value, nil
-}
-
-func (s *svc) GetMetricValueJSON() error {
-	panic("")
+	return &m.Value, business.Gauge, nil
 }
 
 func (s *svc) GetAllMetrics(ctx context.Context) ([]business.CounterMetric, []business.GaugeMetric, error) {

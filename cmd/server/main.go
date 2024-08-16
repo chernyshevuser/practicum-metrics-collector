@@ -13,7 +13,7 @@ import (
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/router"
 	storageimpl "github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage/impl"
 
-	"github.com/chernyshevuser/practicum-metrics-collector/tools/config"
+	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/config"
 	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 	"github.com/gorilla/mux"
 	"golang.org/x/sync/errgroup"
