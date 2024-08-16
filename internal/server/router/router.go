@@ -25,7 +25,7 @@ func SetupRouter(api handler.API, router *mux.Router, logger logger.Logger) {
 	router.HandleFunc(UpdateMetricJSONPath, middleware.Accept(api.UpdateMetricJSON, logger)).Methods(http.MethodPost)
 	router.HandleFunc(UpdateMetricsJSONPath, middleware.Accept(api.UpdateMetricsJSON, logger)).Methods(http.MethodPost)
 	router.HandleFunc(GetMetricValuePath, middleware.Accept(api.GetMetricValue, logger)).Methods(http.MethodGet)
-	router.HandleFunc(GetMetricValueJSONPath, middleware.Accept(api.GetMetricValueJSON, logger)).Methods(http.MethodGet)
+	router.HandleFunc(GetMetricValueJSONPath, middleware.Accept(api.GetMetricValueJSON, logger)).Methods(http.MethodPost)
 	router.HandleFunc(GetAllMetricsPath, middleware.Accept(api.GetAllMetrics, logger)).Methods(http.MethodGet)
 	router.HandleFunc(PingDB, middleware.Accept(api.PingDB, logger)).Methods(http.MethodGet)
 }
