@@ -2,8 +2,10 @@ package middleware
 
 import (
 	"compress/gzip"
+	"io"
 	"net/http"
 	"runtime/debug"
+	"strings"
 
 	sugared "github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 )
@@ -41,6 +43,37 @@ func PanicMiddleware(next http.HandlerFunc, logger sugared.Logger) http.HandlerF
 		}()
 
 		next(w, r)
+	}
+}
+
+type gzipWriter struct {
+	http.ResponseWriter
+	Writer io.Writer
+}
+
+func (w gzipWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
+}
+
+func CompressMiddleware(next http.HandlerFunc, logger sugared.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			next(w, r)
+			return
+		}
+
+		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
+		if err != nil {
+			io.WriteString(w, err.Error())
+			return
+		}
+		defer gz.Close()
+
+		w.Header().Set("Content-Encoding", "gzip")
+
+		next(gzipWriter{ResponseWriter: w,
+			Writer: gz,
+		}, r)
 	}
 }
 
