@@ -113,6 +113,7 @@ func Accept(f func(http.ResponseWriter, *http.Request) error, logger sugared.Log
 		PanicMiddleware,
 		LogMiddleware,
 		DecompressMiddleware,
+		CompressMiddleware,
 	}
 
 	prelude := ErrorMiddleware(f, logger)
