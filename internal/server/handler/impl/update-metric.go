@@ -237,7 +237,7 @@ func (a *api) UpdateMetricsJSON(w http.ResponseWriter, r *http.Request) error {
 			Value *float64 `json:"value,omitempty"`
 		}{
 			ID:    m.ID,
-			MType: string(business.Counter),
+			MType: string(business.Gauge),
 			Value: &val,
 		})
 	}
