@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
-	"github.com/shopspring/decimal"
 )
 
 func (s *svc) Update(ctx context.Context, gaugeMetrics []storage.GaugeMetric, counterMetrics []storage.CounterMetric) (err error) {
@@ -13,17 +12,7 @@ func (s *svc) Update(ctx context.Context, gaugeMetrics []storage.GaugeMetric, co
 	}
 
 	for _, m := range counterMetrics {
-		storedVal := decimal.NewFromInt(0)
-		stored, ok := s.counterStorage.Get(m.ID)
-		if ok {
-			tmp := stored.(storage.CounterMetric)
-			storedVal = tmp.Delta
-		}
-
-		s.counterStorage.Set(m.ID, storage.CounterMetric{
-			ID:    m.ID,
-			Delta: storedVal.Add(m.Delta),
-		})
+		s.counterStorage.Set(m.ID, m)
 	}
 
 	return nil
