@@ -19,7 +19,10 @@ func (s *svc) Update(ctx context.Context, gaugeMetrics []storage.GaugeMetric, co
 			storedVal = stored.(decimal.Decimal)
 		}
 
-		s.counterStorage.Set(m.ID, storedVal.Add(m.Delta))
+		s.counterStorage.Set(m.ID, storage.CounterMetric{
+			ID:    m.ID,
+			Delta: storedVal.Add(m.Delta),
+		})
 	}
 
 	return nil
