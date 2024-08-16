@@ -33,7 +33,7 @@ func (a *api) UpdateMetric(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	err := a.mc.UpdateMetrics(ctx, []business.RawMetric{
+	_, _, err := a.mc.UpdateMetrics(ctx, []business.RawMetric{
 		{
 			ID:    metricNameStr,
 			Type:  metricTypeStr,
@@ -98,7 +98,7 @@ func (a *api) UpdateMetricJSON(w http.ResponseWriter, r *http.Request) error {
 		metricValueStr = fmt.Sprintf("%v", *req.Value)
 	}
 
-	err := a.mc.UpdateMetrics(ctx, []business.RawMetric{
+	updatedCounterMetrics, updatedGaugeMetrics, err := a.mc.UpdateMetrics(ctx, []business.RawMetric{
 		{
 			ID:    metricNameStr,
 			Type:  metricTypeStr,
@@ -111,9 +111,25 @@ func (a *api) UpdateMetricJSON(w http.ResponseWriter, r *http.Request) error {
 		return nil
 	}
 
-	w.WriteHeader(status)
+	var resp updateMetricResp
 
-	resp := updateMetricResp(req)
+	if len(updatedCounterMetrics) != 0 {
+		resp.ID = updatedCounterMetrics[0].ID
+		resp.MType = string(business.Counter)
+
+		delta := updatedCounterMetrics[0].Delta.IntPart()
+		resp.Delta = &delta
+	} else if len(updatedGaugeMetrics) != 0 {
+		resp.ID = updatedGaugeMetrics[0].ID
+		resp.MType = string(business.Gauge)
+
+		val := updatedGaugeMetrics[0].Value.InexactFloat64()
+		resp.Value = &val
+	} else {
+		return fmt.Errorf("smth terrible happened with business UpdateMetrics func")
+	}
+
+	w.WriteHeader(status)
 
 	respBytes, err := json.Marshal(resp)
 	if err != nil {
@@ -189,16 +205,44 @@ func (a *api) UpdateMetricsJSON(w http.ResponseWriter, r *http.Request) error {
 		})
 	}
 
-	err := a.mc.UpdateMetrics(ctx, rawMetrics)
+	updatedCounterMetrics, updatedGaugeMetrics, err := a.mc.UpdateMetrics(ctx, rawMetrics)
 	if err != nil {
 		status = http.StatusBadRequest
 		w.WriteHeader(status)
 		return nil
 	}
 
-	w.WriteHeader(status)
+	var resp updateMetricsResp
 
-	resp := updateMetricsResp(req)
+	for _, m := range updatedCounterMetrics {
+		delta := m.Delta.IntPart()
+		resp.Metrics = append(resp.Metrics, struct {
+			ID    string   `json:"id"`
+			MType string   `json:"type"`
+			Delta *int64   `json:"delta,omitempty"`
+			Value *float64 `json:"value,omitempty"`
+		}{
+			ID:    m.ID,
+			MType: string(business.Counter),
+			Delta: &delta,
+		})
+	}
+
+	for _, m := range updatedGaugeMetrics {
+		val := m.Value.InexactFloat64()
+		resp.Metrics = append(resp.Metrics, struct {
+			ID    string   `json:"id"`
+			MType string   `json:"type"`
+			Delta *int64   `json:"delta,omitempty"`
+			Value *float64 `json:"value,omitempty"`
+		}{
+			ID:    m.ID,
+			MType: string(business.Counter),
+			Value: &val,
+		})
+	}
+
+	w.WriteHeader(status)
 
 	respBytes, err := json.Marshal(resp)
 	if err != nil {

@@ -36,7 +36,7 @@ type RawMetric struct {
 }
 
 type MetricsCollector interface {
-	UpdateMetrics(ctx context.Context, metrics []RawMetric) error
+	UpdateMetrics(ctx context.Context, metrics []RawMetric) (updatedCounterMetric []CounterMetric, updatedGaugeMetrics []GaugeMetric, err error)
 	GetMetricValue(ctx context.Context, metricType, metricName string) (val *decimal.Decimal, mType MetricType, err error)
 	GetAllMetrics(ctx context.Context) ([]CounterMetric, []GaugeMetric, error)
 	PingDB() error

@@ -8,6 +8,24 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+func (s *svc) Lock() {
+	panic("")
+}
+
+func (s *svc) Unlock() {
+	panic("")
+}
+
+func (s *svc) Ping(ctx context.Context) error {
+	return nil
+}
+
+func (s *svc) Close() error {
+	s.conn.Close()
+	s.logger.Info("goodbye from db-svc")
+	return nil
+}
+
 func (s *svc) query(ctx context.Context, query string, args ...interface{}) (pgx.Rows, error) {
 	rows, err := s.conn.Query(ctx, query, args...)
 	if err != nil {

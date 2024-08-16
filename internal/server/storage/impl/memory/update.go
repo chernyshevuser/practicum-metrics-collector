@@ -7,7 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (s *svc) Update(ctx context.Context, gaugeMetrics []storage.GaugeMetric, counterMetrics []storage.CounterMetric) error {
+func (s *svc) Update(ctx context.Context, gaugeMetrics []storage.GaugeMetric, counterMetrics []storage.CounterMetric) (err error) {
 	for _, m := range gaugeMetrics {
 		s.gaugeStorage.Set(m.ID, m)
 	}

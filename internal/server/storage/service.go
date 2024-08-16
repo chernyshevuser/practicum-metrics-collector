@@ -17,11 +17,14 @@ type GaugeMetric struct {
 }
 
 type Storage interface {
-	Update(ctx context.Context, gaugeMetrics []GaugeMetric, counterMetrics []CounterMetric) error
+	Update(ctx context.Context, gaugeMetrics []GaugeMetric, counterMetrics []CounterMetric) (err error)
 
 	GetGauge(ctx context.Context, id string) (*GaugeMetric, error)
 	GetCounter(ctx context.Context, id string) (*CounterMetric, error)
 	GetAll(ctx context.Context) (*[]GaugeMetric, *[]CounterMetric, error)
+
+	Lock()
+	Unlock()
 
 	Ping(ctx context.Context) error
 	Close() error
