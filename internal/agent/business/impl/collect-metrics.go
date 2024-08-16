@@ -16,7 +16,7 @@ func (s *svc) collectMetrics() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	s.pollCount.Add(decimal.NewFromInt(1))
+	s.pollCount = s.pollCount.Add(decimal.NewFromInt(1))
 
 	metrics = append(metrics, Metric{
 		ID:   "PollCount",
