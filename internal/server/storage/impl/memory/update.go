@@ -16,7 +16,8 @@ func (s *svc) Update(ctx context.Context, gaugeMetrics []storage.GaugeMetric, co
 		storedVal := decimal.NewFromInt(0)
 		stored, ok := s.counterStorage.Get(m.ID)
 		if ok {
-			storedVal = stored.(decimal.Decimal)
+			tmp := stored.(storage.CounterMetric)
+			storedVal = tmp.Delta
 		}
 
 		s.counterStorage.Set(m.ID, storage.CounterMetric{
