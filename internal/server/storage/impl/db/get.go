@@ -17,12 +17,12 @@ func (s *svc) Get(ctx context.Context, key string) (*storage.Metric, error) {
 	}
 	defer tx.Rollback(ctx)
 
-	metricId, metricType, err := storage.ParseKey(key)
+	metricID, metricType, err := storage.ParseKey(key)
 	if err != nil {
 		return nil, err
 	}
 
-	rawValue, err := s.getQuery(ctx, tx, metricId, metricType)
+	rawValue, err := s.getQuery(ctx, tx, metricID, metricType)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -40,7 +40,7 @@ func (s *svc) Get(ctx context.Context, key string) (*storage.Metric, error) {
 	}
 
 	return &storage.Metric{
-		ID:   metricId,
+		ID:   metricID,
 		Type: metricType,
 		Val:  val,
 	}, nil
