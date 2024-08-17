@@ -10,17 +10,30 @@ import (
 )
 
 type svc struct {
-	logger         logger.Logger
-	counterStorage *st.Storage
-	gaugeStorage   *st.Storage
-	mu             *sync.Mutex
+	logger   logger.Logger
+	storage  *st.Storage
+	mu       *sync.Mutex
+	filepath string
 }
 
-func New(ctx context.Context, logger logger.Logger) (storage.Storage, error) {
-	return &svc{
-		logger:         logger,
-		counterStorage: st.New[string](),
-		gaugeStorage:   st.New[string](),
-		mu:             &sync.Mutex{},
-	}, nil
+func New(ctx context.Context, logger logger.Logger, filepath string, restoreData bool) (storage.Storage, error) {
+	s := svc{
+		logger:   logger,
+		storage:  st.New[string](),
+		mu:       &sync.Mutex{},
+		filepath: filepath,
+	}
+
+	if restoreData && filepath != "" {
+
+		if err := s.Actualize(ctx); err != nil {
+			logger.Errorw(
+				"can't actualize memory storage",
+				"reason", err,
+			)
+			return nil, err
+		}
+	}
+
+	return &s, nil
 }

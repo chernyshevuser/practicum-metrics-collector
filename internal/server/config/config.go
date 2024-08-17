@@ -29,7 +29,7 @@ var (
 func Setup(logger logger.Logger) {
 	flag.StringVar(&Addr, "a", "localhost:8080", "server addr")
 	flag.Int64Var(&StoreInterval, "i", 300, "store interval")
-	flag.StringVar(&FileStoragePath, "f", "", "file storage path")
+	flag.StringVar(&FileStoragePath, "f", "data.json", "file storage path")
 	flag.BoolVar(&Restore, "r", true, "restore flag")
 	flag.StringVar(&DatabaseDsn, "d", "", "database data source name")
 	flag.StringVar(&HashKey, "k", "", "hash key")

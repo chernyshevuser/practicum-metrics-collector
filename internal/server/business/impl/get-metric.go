@@ -5,10 +5,14 @@ import (
 	"fmt"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/business"
+	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
 	"github.com/shopspring/decimal"
 )
 
 func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string) (val *decimal.Decimal, mType business.MetricType, err error) {
+	s.db.Lock()
+	defer s.db.Unlock()
+
 	t := s.parseMetricType(metricType)
 
 	s.logger.Infow(
@@ -25,7 +29,7 @@ func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string)
 
 	//case counter
 	if t == business.Counter {
-		m, err := s.db.GetCounter(ctx, metricName)
+		stored, err := s.db.Get(ctx, storage.BuildKey(metricName, string(t)))
 		if err != nil {
 			s.logger.Errorw(
 				"storage problem",
@@ -35,15 +39,15 @@ func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string)
 			return nil, "", fmt.Errorf("can't get counter metric val from db, reason: %v", err)
 		}
 
-		if m == nil {
+		if stored == nil {
 			return nil, "", nil
 		}
 
-		return &m.Delta, business.Counter, nil
+		return &stored.Val, business.Counter, nil
 	}
 
 	//case gauge
-	m, err := s.db.GetGauge(ctx, metricName)
+	stored, err := s.db.Get(ctx, storage.BuildKey(metricName, string(t)))
 	if err != nil {
 		s.logger.Errorw(
 			"storage problem",
@@ -53,15 +57,18 @@ func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string)
 		return nil, "", fmt.Errorf("can't get gauge metric val from db, reason: %v", err)
 	}
 
-	if m == nil {
+	if stored == nil {
 		return nil, "", nil
 	}
 
-	return &m.Value, business.Gauge, nil
+	return &stored.Val, business.Gauge, nil
 }
 
 func (s *svc) GetAllMetrics(ctx context.Context) ([]business.CounterMetric, []business.GaugeMetric, error) {
-	gaugeMetrics, counterMetrics, err := s.db.GetAll(ctx)
+	s.db.Lock()
+	defer s.db.Unlock()
+
+	metrics, err := s.db.GetAll(ctx)
 	if err != nil {
 		s.logger.Errorw(
 			"storage problem",
@@ -71,21 +78,26 @@ func (s *svc) GetAllMetrics(ctx context.Context) ([]business.CounterMetric, []bu
 		return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't get metrics from db, reason: %v", err)
 	}
 
-	gaugeMetricsRes := make([]business.GaugeMetric, 0, len(*gaugeMetrics))
-	for _, tmp := range *gaugeMetrics {
-		gaugeMetricsRes = append(gaugeMetricsRes, business.GaugeMetric{
-			ID:    tmp.ID,
-			Value: tmp.Value,
-		})
+	var (
+		counterMetrics []business.CounterMetric
+		gaugeMetrics   []business.GaugeMetric
+	)
+
+	for _, tmp := range *metrics {
+		if tmp.Type == string(business.Counter) {
+			counterMetrics = append(counterMetrics, business.CounterMetric{
+				ID:    tmp.ID,
+				Delta: tmp.Val,
+			})
+		} else if tmp.Type == string(business.Gauge) {
+			gaugeMetrics = append(gaugeMetrics, business.GaugeMetric{
+				ID:    tmp.ID,
+				Value: tmp.Val,
+			})
+		} else {
+			return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("incorrect metric type(%s) from db", tmp.Type)
+		}
 	}
 
-	counterMetricsRes := make([]business.CounterMetric, 0, len(*counterMetrics))
-	for _, tmp := range *counterMetrics {
-		counterMetricsRes = append(counterMetricsRes, business.CounterMetric{
-			ID:    tmp.ID,
-			Delta: tmp.Delta,
-		})
-	}
-
-	return counterMetricsRes, gaugeMetricsRes, nil
+	return counterMetrics, gaugeMetrics, nil
 }
