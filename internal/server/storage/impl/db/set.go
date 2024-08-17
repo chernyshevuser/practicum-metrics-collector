@@ -8,7 +8,7 @@ import (
 )
 
 func (s *svc) Set(ctx context.Context, metrics []storage.Metric) (err error) {
-	tx, err := s.beginR(ctx)
+	tx, err := s.beginW(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to create db tx: %w", err)
 	}

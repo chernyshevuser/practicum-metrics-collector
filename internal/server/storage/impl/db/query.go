@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *svc) setQuery(ctx context.Context, tx pgx.Tx, metricId, metricType, metricVal string) error {
+func (s *svc) setQuery(ctx context.Context, tx pgx.Tx, metricID, metricType, metricVal string) error {
 	q := `
 		INSERT INTO Metrics ("id", "type", "val")
 		VALUES ($1, $2, $3)
@@ -17,7 +17,7 @@ func (s *svc) setQuery(ctx context.Context, tx pgx.Tx, metricId, metricType, met
 	_, err := tx.Exec(
 		ctx,
 		q,
-		metricId,
+		metricID,
 		metricType,
 		metricVal,
 	)
@@ -25,7 +25,7 @@ func (s *svc) setQuery(ctx context.Context, tx pgx.Tx, metricId, metricType, met
 	return err
 }
 
-func (s *svc) getQuery(ctx context.Context, tx pgx.Tx, metricId, metricType string) (metricValue string, err error) {
+func (s *svc) getQuery(ctx context.Context, tx pgx.Tx, metricID, metricType string) (metricValue string, err error) {
 	q := `
 		SELECT val
 		FROM public.Metrics
@@ -34,7 +34,7 @@ func (s *svc) getQuery(ctx context.Context, tx pgx.Tx, metricId, metricType stri
 	err = tx.QueryRow(
 		ctx,
 		q,
-		metricId,
+		metricID,
 		metricType,
 	).Scan(&metricValue)
 	if err != nil {

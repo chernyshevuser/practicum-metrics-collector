@@ -2,9 +2,11 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
+	"github.com/jackc/pgx/v5"
 	"github.com/shopspring/decimal"
 )
 
@@ -22,6 +24,9 @@ func (s *svc) Get(ctx context.Context, key string) (*storage.Metric, error) {
 
 	rawValue, err := s.getQuery(ctx, tx, metricId, metricType)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 

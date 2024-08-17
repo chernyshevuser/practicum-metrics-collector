@@ -61,6 +61,10 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 	for i := range counterMetrics {
 		stored, err := s.db.Get(ctx, storage.BuildKey(counterMetrics[i].ID, counterMetrics[i].Type))
 		if err != nil {
+			s.logger.Errorw(
+				"can't get counter metric from db",
+				"reason", err,
+			)
 			return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't get metric from db, reason: %v", err)
 		}
 
@@ -71,11 +75,19 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 
 	err = s.db.Set(ctx, counterMetrics)
 	if err != nil {
+		s.logger.Errorw(
+			"can't update counter metrics",
+			"reason", err,
+		)
 		return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't update counter metrics, reason: %v", err)
 	}
 
 	err = s.db.Set(ctx, gaugeMetrics)
 	if err != nil {
+		s.logger.Errorw(
+			"can't update gauge metrics",
+			"reason", err,
+		)
 		return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't update gauge metrics, reason: %v", err)
 	}
 
