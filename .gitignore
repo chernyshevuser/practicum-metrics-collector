@@ -26,3 +26,4 @@ vendor/
 
 cmd/agent/init.go
 cmd/server/init.go
+cmd/server/data.json

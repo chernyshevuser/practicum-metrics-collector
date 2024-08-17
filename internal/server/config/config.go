@@ -95,4 +95,14 @@ func Setup(logger logger.Logger) {
 	} else {
 		HashKey = hashKey
 	}
+
+	logger.Infow(
+		"envs",
+		"addr", Addr,
+		"storeInterval", StoreInterval,
+		"fileStoragePath", FileStoragePath,
+		"restore", Restore,
+		"databaseDsn", DatabaseDsn,
+		"hashKey", HashKey,
+	)
 }
