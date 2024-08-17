@@ -25,7 +25,6 @@ func New(ctx context.Context, logger logger.Logger, filepath string, restoreData
 	}
 
 	if restoreData && filepath != "" {
-
 		if err := s.Actualize(ctx); err != nil {
 			logger.Errorw(
 				"can't actualize memory storage",
@@ -33,6 +32,10 @@ func New(ctx context.Context, logger logger.Logger, filepath string, restoreData
 			)
 			return nil, err
 		}
+		logger.Infow(
+			"metrics are actualized successfully",
+			"source file", s.filepath,
+		)
 	}
 
 	return &s, nil
