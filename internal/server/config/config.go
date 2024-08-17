@@ -27,7 +27,7 @@ var (
 )
 
 func Setup(logger logger.Logger) {
-	flag.StringVar(&Addr, "a", "http://localhost:8080", "server addr")
+	flag.StringVar(&Addr, "a", "localhost:8080", "server addr")
 	flag.Int64Var(&StoreInterval, "i", 300, "store interval")
 	flag.StringVar(&FileStoragePath, "f", "", "file storage path")
 	flag.BoolVar(&Restore, "r", true, "restore flag")
