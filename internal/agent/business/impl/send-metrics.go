@@ -143,7 +143,6 @@ func (s *svc) sendWithRetry(ctx context.Context, cl *http.Client, m Metric) (err
 			return
 		}
 	}
-
 	if err != nil {
 		return err
 	}
