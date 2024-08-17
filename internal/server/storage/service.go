@@ -13,8 +13,8 @@ type Metric struct {
 	Val  decimal.Decimal
 }
 
-func BuildKey(metricId, metricType string) string {
-	return fmt.Sprintf("%s_%s", metricId, metricType)
+func BuildKey(metricID, metricType string) string {
+	return fmt.Sprintf("%s_%s", metricID, metricType)
 }
 
 type Storage interface {
