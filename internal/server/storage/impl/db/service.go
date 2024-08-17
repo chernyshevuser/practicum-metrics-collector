@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sync"
 
 	"fmt"
 
@@ -14,6 +15,7 @@ import (
 )
 
 type svc struct {
+	mu     *sync.Mutex
 	conn   *pgxpool.Pool
 	logger logger.Logger
 }
@@ -23,7 +25,6 @@ func New(ctx context.Context, logger logger.Logger) (storage.Storage, error) {
 		ctx,
 		config.DatabaseDsn,
 	)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dbPool: %v", err)
 	}
@@ -36,6 +37,7 @@ func New(ctx context.Context, logger logger.Logger) (storage.Storage, error) {
 	s := svc{
 		conn:   dbPool,
 		logger: logger,
+		mu:     &sync.Mutex{},
 	}
 
 	err = s.Actualize(ctx)

@@ -9,15 +9,15 @@ import (
 )
 
 func (s *svc) Lock() {
-	panic("")
+	s.mu.Lock()
 }
 
 func (s *svc) Unlock() {
-	panic("")
+	s.mu.Unlock()
 }
 
 func (s *svc) Ping(ctx context.Context) error {
-	return nil
+	return s.conn.Ping(ctx)
 }
 
 func (s *svc) Dump(ctx context.Context) error {

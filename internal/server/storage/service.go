@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/shopspring/decimal"
 )
@@ -15,6 +16,15 @@ type Metric struct {
 
 func BuildKey(metricID, metricType string) string {
 	return fmt.Sprintf("%s_%s", metricID, metricType)
+}
+
+func ParseKey(key string) (metricID, metricType string, err error) {
+	tmp := strings.Split(key, "_")
+	if len(tmp) != 2 {
+		return "", "", fmt.Errorf("can't parse key")
+	}
+
+	return tmp[0], tmp[1], nil
 }
 
 type Storage interface {
