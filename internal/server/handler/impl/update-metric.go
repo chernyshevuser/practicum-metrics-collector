@@ -178,10 +178,12 @@ func (a *api) UpdateMetricsJSON(w http.ResponseWriter, r *http.Request) error {
 			w.WriteHeader(status)
 			return nil
 		} else if m.Delta != nil {
-			metricValueStr = fmt.Sprintf("%v", *m.Delta)
+			metricValueStr = fmt.Sprintf("%d", *m.Delta)
 		} else if m.Value != nil {
-			metricValueStr = fmt.Sprintf("%v", *m.Value)
+			metricValueStr = fmt.Sprintf("%f", *m.Value)
 		}
+
+		fmt.Println(metricNameStr, metricTypeStr, metricValueStr)
 
 		rawMetrics = append(rawMetrics, business.RawMetric{
 			ID:    metricNameStr,
