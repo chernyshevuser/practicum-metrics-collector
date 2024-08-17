@@ -24,19 +24,22 @@ func New(ctx context.Context, logger logger.Logger, filepath string, restoreData
 		filepath: filepath,
 	}
 
-	// if restoreData && filepath != "" {
-	// 	if err := s.Actualize(ctx); err != nil {
-	// 		logger.Errorw(
-	// 			"can't actualize memory storage",
-	// 			"reason", err,
-	// 		)
-	// 		return nil, err
-	// 	}
-	// 	logger.Infow(
-	// 		"metrics are actualized successfully",
-	// 		"source file", s.filepath,
-	// 	)
-	// }
+	if restoreData && filepath != "" {
+		s.mu.Lock()
+		defer s.mu.Unlock()
+
+		if err := s.Actualize(ctx); err != nil {
+			logger.Errorw(
+				"can't actualize memory storage",
+				"reason", err,
+			)
+			return nil, err
+		}
+		logger.Infow(
+			"metrics are actualized successfully",
+			"source file", s.filepath,
+		)
+	}
 
 	return &s, nil
 }

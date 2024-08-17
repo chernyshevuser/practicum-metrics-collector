@@ -31,11 +31,17 @@ type rawData struct {
 }
 
 func (s *svc) Actualize(ctx context.Context) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	file, err := os.OpenFile(s.filepath, os.O_RDONLY, 0666)
 	if err != nil {
+		if os.IsNotExist(err) {
+			s.logger.Infow(
+				"db is not actualized",
+				"source file", s.filepath,
+				"reason", "file doesn't exist",
+			)
+			return nil
+		}
+
 		return err
 	}
 	defer file.Close()
