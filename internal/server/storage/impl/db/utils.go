@@ -26,7 +26,9 @@ func (s *svc) Dump(ctx context.Context) error {
 
 func (s *svc) Close() error {
 	s.conn.Close()
+
 	s.logger.Info("goodbye from db-svc")
+
 	return nil
 }
 
