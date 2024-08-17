@@ -9,22 +9,21 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (s *svc) UpdateMetrics(ctx context.Context, metrics []business.RawMetric) (updatedCounterMetrics []business.CounterMetric, updatedGaugeMetrics []business.GaugeMetric, err error) {
-	var counterMetrics []storage.CounterMetric
-	var gaugeMetrics []storage.GaugeMetric
+func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric) (updatedCounterMetrics []business.CounterMetric, updatedGaugeMetrics []business.GaugeMetric, err error) {
+	var counterMetrics, gaugeMetrics []storage.Metric
 
-	for _, metric := range metrics {
-		t := s.parseMetricType(metric.Type)
+	for _, rm := range rawMetrics {
+		t := s.parseMetricType(rm.Type)
 
 		//case unknown type
 		if t == business.Unknown {
-			return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("given metric type(%s) in unknown", metric.Type)
+			return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("given metric type(%s) in unknown", rm.Type)
 		}
 
 		if t == business.Counter {
-			val, err := decimal.NewFromString(metric.Value)
+			val, err := decimal.NewFromString(rm.Value)
 			if err != nil {
-				return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't parse counter metric value(%s) to decimal.Decimal, reason: %v", metric.Value, err)
+				return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't parse counter metric value(%s) to decimal.Decimal, reason: %v", rm.Value, err)
 			}
 
 			if !s.isDecimalInt(val) {
@@ -32,27 +31,27 @@ func (s *svc) UpdateMetrics(ctx context.Context, metrics []business.RawMetric) (
 			}
 
 			counterMetrics = append(
-				counterMetrics,
-				storage.CounterMetric{
-					ID:    metric.ID,
-					Delta: val,
+				counterMetrics, storage.Metric{
+					ID:   rm.ID,
+					Type: rm.Type,
+					Val:  val,
 				},
 			)
 		} else if t == business.Gauge {
-			val, err := decimal.NewFromString(metric.Value)
+			val, err := decimal.NewFromString(rm.Value)
 			if err != nil {
-				return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't parse gauge metric value(%s) to decimal.Decimal, reason: %v", metric.Value, err)
+				return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't parse gauge metric value(%s) to decimal.Decimal, reason: %v", rm.Value, err)
 			}
 
 			gaugeMetrics = append(
-				gaugeMetrics,
-				storage.GaugeMetric{
-					ID:    metric.ID,
-					Value: val,
+				gaugeMetrics, storage.Metric{
+					ID:   rm.ID,
+					Type: rm.Type,
+					Val:  val,
 				},
 			)
 		} else {
-			return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("smth wrong with parsing metric type: %s", metric.Type)
+			return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("smth wrong with parsing metric type: %s", rm.Type)
 		}
 	}
 
@@ -60,19 +59,24 @@ func (s *svc) UpdateMetrics(ctx context.Context, metrics []business.RawMetric) (
 	defer s.db.Unlock()
 
 	for i := range counterMetrics {
-		stored, err := s.db.GetCounter(ctx, counterMetrics[i].ID)
+		stored, err := s.db.Get(ctx, storage.BuildKey(counterMetrics[i].ID, counterMetrics[i].Type))
 		if err != nil {
 			return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't get metric from db, reason: %v", err)
 		}
 
 		if stored != nil {
-			counterMetrics[i].Delta = counterMetrics[i].Delta.Add(stored.Delta)
+			counterMetrics[i].Val = counterMetrics[i].Val.Add(stored.Val)
 		}
 	}
 
-	err = s.db.Update(ctx, gaugeMetrics, counterMetrics)
+	err = s.db.Set(ctx, counterMetrics)
 	if err != nil {
-		return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't update metrics, reason: %v", err)
+		return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't update counter metrics, reason: %v", err)
+	}
+
+	err = s.db.Set(ctx, gaugeMetrics)
+	if err != nil {
+		return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't update gauge metrics, reason: %v", err)
 	}
 
 	return func() []business.CounterMetric {
@@ -80,17 +84,17 @@ func (s *svc) UpdateMetrics(ctx context.Context, metrics []business.RawMetric) (
 			for _, m := range counterMetrics {
 				res = append(res, business.CounterMetric{
 					ID:    m.ID,
-					Delta: m.Delta,
+					Delta: m.Val,
 				})
 			}
 			return res
 		}(),
 		func() []business.GaugeMetric {
 			res := make([]business.GaugeMetric, 0, len(gaugeMetrics))
-			for _, m := range gaugeMetrics {
+			for _, u := range gaugeMetrics {
 				res = append(res, business.GaugeMetric{
-					ID:    m.ID,
-					Value: m.Value,
+					ID:    u.ID,
+					Value: u.Val,
 				})
 			}
 			return res

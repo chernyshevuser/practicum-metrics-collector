@@ -6,14 +6,10 @@ import (
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
 )
 
-func (s *svc) GetGauge(ctx context.Context, id string) (*storage.GaugeMetric, error) {
+func (s *svc) Get(ctx context.Context, key string) (*storage.Metric, error) {
 	panic("")
 }
 
-func (s *svc) GetCounter(ctx context.Context, id string) (*storage.CounterMetric, error) {
-	panic("")
-}
-
-func (s *svc) GetAll(ctx context.Context) (*[]storage.GaugeMetric, *[]storage.CounterMetric, error) {
+func (s *svc) GetAll(ctx context.Context) (*[]storage.Metric, error) {
 	panic("")
 }

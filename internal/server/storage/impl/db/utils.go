@@ -20,6 +20,10 @@ func (s *svc) Ping(ctx context.Context) error {
 	return nil
 }
 
+func (s *svc) Dump(ctx context.Context) error {
+	return nil
+}
+
 func (s *svc) Close() error {
 	s.conn.Close()
 	s.logger.Info("goodbye from db-svc")

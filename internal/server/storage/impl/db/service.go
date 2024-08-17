@@ -38,7 +38,7 @@ func New(ctx context.Context, logger logger.Logger) (storage.Storage, error) {
 		logger: logger,
 	}
 
-	err = s.actualize(ctx)
+	err = s.Actualize(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("can't actualize db, reason: %v", err)
 	}
