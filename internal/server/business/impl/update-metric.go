@@ -52,6 +52,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 		}
 	}
 
+	// make unique
 	counterMetrics = func() []storage.Metric {
 		data := make(map[string]int64)
 		for _, cm := range counterMetrics {
@@ -70,6 +71,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 		return out
 	}()
 
+	// make unique
 	gaugeMetrics = func() []storage.Metric {
 		data := make(map[string]float64)
 		for _, cm := range gaugeMetrics {
@@ -91,6 +93,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 	s.db.Lock()
 	defer s.db.Unlock()
 
+	// increment counter vals
 	for i := range counterMetrics {
 		stored, err := s.db.Get(ctx, storage.BuildKey(counterMetrics[i].ID, counterMetrics[i].Type))
 		if err != nil {

@@ -2,7 +2,6 @@ package impl
 
 import (
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/business"
-	"github.com/shopspring/decimal"
 )
 
 func (s *svc) parseMetricType(in string) business.MetricType {
@@ -15,8 +14,4 @@ func (s *svc) parseMetricType(in string) business.MetricType {
 	}
 
 	return business.Unknown
-}
-
-func (s *svc) isDecimalInt(d decimal.Decimal) bool {
-	return d.Equal(d.Truncate(0))
 }

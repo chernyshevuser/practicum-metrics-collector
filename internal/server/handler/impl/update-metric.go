@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/business"
+	"github.com/shopspring/decimal"
 )
 
 func (a *api) UpdateMetric(w http.ResponseWriter, r *http.Request) error {
@@ -180,10 +181,8 @@ func (a *api) UpdateMetricsJSON(w http.ResponseWriter, r *http.Request) error {
 		} else if m.Delta != nil {
 			metricValueStr = fmt.Sprintf("%d", *m.Delta)
 		} else if m.Value != nil {
-			metricValueStr = fmt.Sprintf("%f", *m.Value)
+			metricValueStr = decimal.NewFromFloat(*m.Value).String()
 		}
-
-		fmt.Println(metricNameStr, metricTypeStr, metricValueStr)
 
 		rawMetrics = append(rawMetrics, business.RawMetric{
 			ID:    metricNameStr,
