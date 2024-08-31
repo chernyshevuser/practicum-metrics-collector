@@ -10,41 +10,57 @@ import (
 )
 
 func (s *svc) Get(ctx context.Context, key string) (*storage.Metric, error) {
-	tx, err := s.beginR(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create db tx: %w", err)
-	}
-	defer tx.Rollback(ctx)
+	var metric storage.Metric
 
-	metric, err := s.getQuery(ctx, tx, key)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+	if r := s.wrap(func() error {
+		tx, err := s.beginR(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to create db tx: %w", err)
 		}
-		return nil, err
-	}
+		defer tx.Rollback(ctx)
 
-	if err = tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("failed to commit db tx: %w", err)
+		metric, err = s.getQuery(ctx, tx, key)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil
+			}
+			return err
+		}
+
+		if err = tx.Commit(ctx); err != nil {
+			return fmt.Errorf("failed to commit db tx: %w", err)
+		}
+
+		return nil
+	}); r != nil {
+		return nil, r
 	}
 
 	return &metric, nil
 }
 
 func (s *svc) GetAll(ctx context.Context) (*[]storage.Metric, error) {
-	tx, err := s.beginR(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create db tx: %w", err)
-	}
-	defer tx.Rollback(ctx)
+	var metrics []storage.Metric
 
-	metrics, err := s.getAllQuery(ctx, tx)
-	if err != nil {
-		return nil, err
-	}
+	if r := s.wrap(func() error {
+		tx, err := s.beginR(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to create db tx: %w", err)
+		}
+		defer tx.Rollback(ctx)
 
-	if err = tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("failed to commit db tx: %w", err)
+		metrics, err = s.getAllQuery(ctx, tx)
+		if err != nil {
+			return err
+		}
+
+		if err = tx.Commit(ctx); err != nil {
+			return fmt.Errorf("failed to commit db tx: %w", err)
+		}
+
+		return nil
+	}); r != nil {
+		return nil, r
 	}
 
 	return &metrics, nil

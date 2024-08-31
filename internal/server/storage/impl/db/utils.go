@@ -2,7 +2,11 @@ package db
 
 import (
 	"context"
+	"errors"
+	"time"
 
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgerrcode"
 	_ "github.com/jackc/pgx/v5/stdlib"
 
 	"github.com/jackc/pgx/v5"
@@ -17,7 +21,9 @@ func (s *svc) Unlock() {
 }
 
 func (s *svc) Ping(ctx context.Context) error {
-	return s.conn.Ping(ctx)
+	return s.wrap(func() error {
+		return s.conn.Ping(ctx)
+	})
 }
 
 func (s *svc) Dump(ctx context.Context) error {
@@ -65,4 +71,28 @@ func (s *svc) beginW(ctx context.Context) (pgx.Tx, error) {
 		AccessMode: pgx.ReadWrite,
 	})
 	return tx, err
+}
+
+func (s *svc) wrap(f func() error) error {
+	var (
+		timeouts = []time.Duration{1 * time.Second, 3 * time.Second, 5 * time.Second}
+		err      error
+		pgErr    *pgconn.PgError
+	)
+
+	for i := 0; i < len(timeouts); i++ {
+		err = f()
+		if err == nil {
+			return nil
+		}
+
+		if err != nil && errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
+			time.Sleep(timeouts[i])
+			continue
+		}
+
+		return err
+	}
+
+	return err
 }
