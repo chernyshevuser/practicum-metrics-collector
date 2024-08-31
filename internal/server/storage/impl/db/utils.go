@@ -86,7 +86,7 @@ func (s *svc) wrap(f func() error) error {
 			return nil
 		}
 
-		if err != nil && errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
+		if errors.As(err, &pgErr) && pgerrcode.UniqueViolation == pgErr.Code {
 			time.Sleep(timeouts[i])
 			continue
 		}

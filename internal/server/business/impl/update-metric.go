@@ -105,7 +105,8 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 		}
 
 		if stored != nil {
-			delta := *counterMetrics[i].Delta + *stored.Delta
+			delta := *counterMetrics[i].Delta
+			delta += *stored.Delta
 			counterMetrics[i].Delta = &delta
 		}
 	}
