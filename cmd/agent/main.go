@@ -27,7 +27,7 @@ func main() {
 		config.PollInterval,
 		config.ReportInterval,
 		config.HashKey,
-		fmt.Sprintf("http://%s/update/", config.Addr),
+		fmt.Sprintf("http://%s/updates/", config.Addr),
 	)
 	defer agentSvc.Close()
 
