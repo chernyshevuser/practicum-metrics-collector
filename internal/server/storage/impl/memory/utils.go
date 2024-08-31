@@ -22,10 +22,10 @@ func (s *svc) Ping(ctx context.Context) error {
 }
 
 type rawData []struct {
-	ID    string   `json:"id"`
-	Type  string   `json:"type"`
-	Val   *float64 `json:"val"`
-	Delta *int64   `json:"delta"`
+	ID    string  `json:"id"`
+	Type  string  `json:"type"`
+	Val   float64 `json:"val"`
+	Delta int64   `json:"delta"`
 }
 
 func (s *svc) Actualize(ctx context.Context) error {
@@ -82,10 +82,10 @@ func (s *svc) Dump(ctx context.Context) error {
 	for _, m := range *metrics {
 		rawData = append(
 			rawData, struct {
-				ID    string   `json:"id"`
-				Type  string   `json:"type"`
-				Val   *float64 `json:"val"`
-				Delta *int64   `json:"delta"`
+				ID    string  `json:"id"`
+				Type  string  `json:"type"`
+				Val   float64 `json:"val"`
+				Delta int64   `json:"delta"`
 			}{
 				ID:    m.ID,
 				Type:  m.Type,

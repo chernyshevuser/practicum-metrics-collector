@@ -31,7 +31,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 				counterMetrics, storage.Metric{
 					ID:    rm.ID,
 					Type:  rm.Type,
-					Delta: &delta,
+					Delta: delta,
 				},
 			)
 		} else if t == business.Gauge {
@@ -44,7 +44,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 				gaugeMetrics, storage.Metric{
 					ID:   rm.ID,
 					Type: rm.Type,
-					Val:  &val,
+					Val:  val,
 				},
 			)
 		} else {
@@ -56,7 +56,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 	counterMetrics = func() []storage.Metric {
 		data := make(map[string]int64)
 		for _, cm := range counterMetrics {
-			data[cm.ID] += *cm.Delta
+			data[cm.ID] += cm.Delta
 		}
 
 		out := make([]storage.Metric, 0, len(data))
@@ -64,7 +64,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 			out = append(out, storage.Metric{
 				ID:    k,
 				Type:  string(business.Counter),
-				Delta: &v,
+				Delta: v,
 			})
 		}
 
@@ -75,7 +75,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 	gaugeMetrics = func() []storage.Metric {
 		data := make(map[string]float64)
 		for _, cm := range gaugeMetrics {
-			data[cm.ID] = *cm.Val
+			data[cm.ID] = cm.Val
 		}
 
 		out := make([]storage.Metric, 0, len(data))
@@ -83,7 +83,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 			out = append(out, storage.Metric{
 				ID:   k,
 				Type: string(business.Gauge),
-				Val:  &v,
+				Val:  v,
 			})
 		}
 
@@ -105,9 +105,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 		}
 
 		if stored != nil {
-			delta := *counterMetrics[i].Delta
-			delta += *stored.Delta
-			counterMetrics[i].Delta = &delta
+			counterMetrics[i].Delta += stored.Delta
 		}
 	}
 
@@ -136,7 +134,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 			for _, m := range counterMetrics {
 				res = append(res, business.CounterMetric{
 					ID:    m.ID,
-					Delta: decimal.NewFromInt(*m.Delta),
+					Delta: decimal.NewFromInt(m.Delta),
 				})
 			}
 			return res
@@ -146,7 +144,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 			for _, m := range gaugeMetrics {
 				res = append(res, business.GaugeMetric{
 					ID:    m.ID,
-					Value: decimal.NewFromFloat(*m.Val),
+					Value: decimal.NewFromFloat(m.Val),
 				})
 			}
 			return res

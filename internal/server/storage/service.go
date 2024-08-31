@@ -8,8 +8,8 @@ import (
 type Metric struct {
 	ID    string
 	Type  string
-	Val   *float64
-	Delta *int64
+	Val   float64
+	Delta int64
 }
 
 func BuildKey(metricName, metricType string) string {
