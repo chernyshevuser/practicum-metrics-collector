@@ -7,7 +7,6 @@ import (
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
 	"github.com/jackc/pgx/v5"
-	"github.com/shopspring/decimal"
 )
 
 func (s *svc) Get(ctx context.Context, key string) (*storage.Metric, error) {
@@ -17,12 +16,7 @@ func (s *svc) Get(ctx context.Context, key string) (*storage.Metric, error) {
 	}
 	defer tx.Rollback(ctx)
 
-	metricID, metricType, err := storage.ParseKey(key)
-	if err != nil {
-		return nil, err
-	}
-
-	rawValue, err := s.getQuery(ctx, tx, metricID, metricType)
+	metric, err := s.getQuery(ctx, tx, key)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
@@ -34,16 +28,7 @@ func (s *svc) Get(ctx context.Context, key string) (*storage.Metric, error) {
 		return nil, fmt.Errorf("failed to commit db tx: %w", err)
 	}
 
-	val, err := decimal.NewFromString(rawValue)
-	if err != nil {
-		return nil, err
-	}
-
-	return &storage.Metric{
-		ID:   metricID,
-		Type: metricType,
-		Val:  val,
-	}, nil
+	return &metric, nil
 }
 
 func (s *svc) GetAll(ctx context.Context) (*[]storage.Metric, error) {
@@ -53,28 +38,13 @@ func (s *svc) GetAll(ctx context.Context) (*[]storage.Metric, error) {
 	}
 	defer tx.Rollback(ctx)
 
-	rawMetrics, err := s.getAllQuery(ctx, tx)
+	metrics, err := s.getAllQuery(ctx, tx)
 	if err != nil {
 		return nil, err
 	}
 
 	if err = tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("failed to commit db tx: %w", err)
-	}
-
-	var metrics []storage.Metric
-
-	for _, m := range rawMetrics {
-		val, err := decimal.NewFromString(m.Val)
-		if err != nil {
-			return nil, err
-		}
-
-		metrics = append(metrics, storage.Metric{
-			ID:   m.ID,
-			Type: m.Type,
-			Val:  val,
-		})
 	}
 
 	return &metrics, nil
