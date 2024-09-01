@@ -13,6 +13,7 @@ const (
 	ReportIntervalEnv = configKey("REPORT_INTERVAL")
 	PollIntervalEnv   = configKey("POLL_INTERVAL")
 	HashKeyEnv        = configKey("KEY")
+	RateLimitEnv      = configKey("RATE_LIMIT")
 )
 
 var (
@@ -20,6 +21,7 @@ var (
 	ReportInterval int64
 	PollInterval   int64
 	HashKey        string
+	RateLimit      int64
 )
 
 func Setup(logger logger.Logger) {
@@ -27,6 +29,7 @@ func Setup(logger logger.Logger) {
 	flag.Int64Var(&ReportInterval, "r", 10, "report")
 	flag.Int64Var(&PollInterval, "p", 2, "poll")
 	flag.StringVar(&HashKey, "k", "", "hash key")
+	flag.Int64Var(&RateLimit, "l", 2, "rate limit")
 
 	flag.Parse()
 
@@ -68,5 +71,15 @@ func Setup(logger logger.Logger) {
 		)
 	} else {
 		HashKey = hashKey
+	}
+
+	rateLimit, err := GetConfigInt64(RateLimitEnv)
+	if err != nil {
+		logger.Errorw(
+			"can't get env",
+			"msg", err,
+		)
+	} else {
+		RateLimit = rateLimit
 	}
 }

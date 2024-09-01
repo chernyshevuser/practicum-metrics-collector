@@ -43,7 +43,8 @@ func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string)
 			return nil, "", nil
 		}
 
-		return &stored.Val, business.Counter, nil
+		delta := decimal.NewFromInt(stored.Delta)
+		return &delta, business.Counter, nil
 	}
 
 	//case gauge
@@ -61,7 +62,8 @@ func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string)
 		return nil, "", nil
 	}
 
-	return &stored.Val, business.Gauge, nil
+	value := decimal.NewFromFloat(stored.Val)
+	return &value, business.Gauge, nil
 }
 
 func (s *svc) GetAllMetrics(ctx context.Context) ([]business.CounterMetric, []business.GaugeMetric, error) {
@@ -87,12 +89,12 @@ func (s *svc) GetAllMetrics(ctx context.Context) ([]business.CounterMetric, []bu
 		if tmp.Type == string(business.Counter) {
 			counterMetrics = append(counterMetrics, business.CounterMetric{
 				ID:    tmp.ID,
-				Delta: tmp.Val,
+				Delta: decimal.NewFromInt(tmp.Delta),
 			})
 		} else if tmp.Type == string(business.Gauge) {
 			gaugeMetrics = append(gaugeMetrics, business.GaugeMetric{
 				ID:    tmp.ID,
-				Value: tmp.Val,
+				Value: decimal.NewFromFloat(tmp.Val),
 			})
 		} else {
 			return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("incorrect metric type(%s) from db", tmp.Type)

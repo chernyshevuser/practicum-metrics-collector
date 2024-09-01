@@ -4,6 +4,8 @@ import (
 	"sync"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/agent/business"
+	"github.com/chernyshevuser/practicum-metrics-collector/internal/agent/business/impl/semaphore"
+	semaphoreimpl "github.com/chernyshevuser/practicum-metrics-collector/internal/agent/business/impl/semaphore/impl"
 	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 
 	"github.com/shopspring/decimal"
@@ -18,9 +20,12 @@ type Metric struct {
 type svc struct {
 	logger logger.Logger
 
-	metrics   []Metric
-	pollCount decimal.Decimal
-	mu        *sync.Mutex
+	semaphore semaphore.Semaphore
+
+	metrics      []Metric
+	extraMetrics []Metric
+	pollCount    decimal.Decimal
+	mu           *sync.Mutex
 
 	closeCh chan struct{}
 	wg      *sync.WaitGroup
@@ -31,9 +36,11 @@ type svc struct {
 	hashKey        string
 }
 
-func New(logger logger.Logger, updateInterval int64, sendInterval int64, hashKey string, addr string) business.Agent {
+func New(logger logger.Logger, updateInterval int64, sendInterval int64, hashKey string, addr string, rateLimit int64) business.Agent {
 	return &svc{
 		logger: logger,
+
+		semaphore: semaphoreimpl.New(rateLimit),
 
 		pollCount: decimal.Decimal{},
 		mu:        &sync.Mutex{},

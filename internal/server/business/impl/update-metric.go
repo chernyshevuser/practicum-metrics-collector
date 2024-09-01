@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/business"
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
@@ -21,26 +22,22 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 		}
 
 		if t == business.Counter {
-			val, err := decimal.NewFromString(rm.Value)
+			delta, err := strconv.ParseInt(rm.Value, 10, 64)
 			if err != nil {
-				return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't parse counter metric value(%s) to decimal.Decimal, reason: %v", rm.Value, err)
-			}
-
-			if !s.isDecimalInt(val) {
-				return []business.CounterMetric{}, []business.GaugeMetric{}, business.ErrWrongMetricVal
+				return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't parse counter metric value(%s) to int64, reason: %v", rm.Value, err)
 			}
 
 			counterMetrics = append(
 				counterMetrics, storage.Metric{
-					ID:   rm.ID,
-					Type: rm.Type,
-					Val:  val,
+					ID:    rm.ID,
+					Type:  rm.Type,
+					Delta: delta,
 				},
 			)
 		} else if t == business.Gauge {
-			val, err := decimal.NewFromString(rm.Value)
+			val, err := strconv.ParseFloat(rm.Value, 64)
 			if err != nil {
-				return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't parse gauge metric value(%s) to decimal.Decimal, reason: %v", rm.Value, err)
+				return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't parse gauge metric value(%s) to float64, reason: %v", rm.Value, err)
 			}
 
 			gaugeMetrics = append(
@@ -55,28 +52,81 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 		}
 	}
 
+	// make unique
+	counterMetrics = func() []storage.Metric {
+		data := make(map[string]int64)
+		for _, cm := range counterMetrics {
+			data[cm.ID] += cm.Delta
+		}
+
+		out := make([]storage.Metric, 0, len(data))
+		for k, v := range data {
+			out = append(out, storage.Metric{
+				ID:    k,
+				Type:  string(business.Counter),
+				Delta: v,
+			})
+		}
+
+		return out
+	}()
+
+	// make unique
+	gaugeMetrics = func() []storage.Metric {
+		data := make(map[string]float64)
+		for _, cm := range gaugeMetrics {
+			data[cm.ID] = cm.Val
+		}
+
+		out := make([]storage.Metric, 0, len(data))
+		for k, v := range data {
+			out = append(out, storage.Metric{
+				ID:   k,
+				Type: string(business.Gauge),
+				Val:  v,
+			})
+		}
+
+		return out
+	}()
+
 	s.db.Lock()
 	defer s.db.Unlock()
 
+	// increment counter vals
 	for i := range counterMetrics {
 		stored, err := s.db.Get(ctx, storage.BuildKey(counterMetrics[i].ID, counterMetrics[i].Type))
 		if err != nil {
+			s.logger.Errorw(
+				"can't get counter metric from db",
+				"reason", err,
+			)
 			return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't get metric from db, reason: %v", err)
 		}
 
 		if stored != nil {
-			counterMetrics[i].Val = counterMetrics[i].Val.Add(stored.Val)
+			counterMetrics[i].Delta += stored.Delta
 		}
 	}
 
-	err = s.db.Set(ctx, counterMetrics)
-	if err != nil {
-		return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't update counter metrics, reason: %v", err)
+	for _, m := range counterMetrics {
+		if err = s.db.Set(ctx, m); err != nil {
+			s.logger.Errorw(
+				"can't update counter metrics",
+				"reason", err,
+			)
+			return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't update counter metrics, reason: %v", err)
+		}
 	}
 
-	err = s.db.Set(ctx, gaugeMetrics)
-	if err != nil {
-		return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't update gauge metrics, reason: %v", err)
+	for _, m := range gaugeMetrics {
+		if err = s.db.Set(ctx, m); err != nil {
+			s.logger.Errorw(
+				"can't update gauge metrics",
+				"reason", err,
+			)
+			return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't update gauge metrics, reason: %v", err)
+		}
 	}
 
 	return func() []business.CounterMetric {
@@ -84,17 +134,17 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 			for _, m := range counterMetrics {
 				res = append(res, business.CounterMetric{
 					ID:    m.ID,
-					Delta: m.Val,
+					Delta: decimal.NewFromInt(m.Delta),
 				})
 			}
 			return res
 		}(),
 		func() []business.GaugeMetric {
 			res := make([]business.GaugeMetric, 0, len(gaugeMetrics))
-			for _, u := range gaugeMetrics {
+			for _, m := range gaugeMetrics {
 				res = append(res, business.GaugeMetric{
-					ID:    u.ID,
-					Value: u.Val,
+					ID:    m.ID,
+					Value: decimal.NewFromFloat(m.Val),
 				})
 			}
 			return res

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/business"
+	"github.com/shopspring/decimal"
 )
 
 func (a *api) UpdateMetric(w http.ResponseWriter, r *http.Request) error {
@@ -143,23 +144,8 @@ func (a *api) UpdateMetricJSON(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-type updateMetricsReq struct {
-	Metrics []struct {
-		ID    string   `json:"id"`
-		MType string   `json:"type"`
-		Delta *int64   `json:"delta,omitempty"`
-		Value *float64 `json:"value,omitempty"`
-	}
-}
-
-type updateMetricsResp struct {
-	Metrics []struct {
-		ID    string   `json:"id"`
-		MType string   `json:"type"`
-		Delta *int64   `json:"delta,omitempty"`
-		Value *float64 `json:"value,omitempty"`
-	}
-}
+type updateMetricsReq []updateMetricReq
+type updateMetricsResp []updateMetricResp
 
 func (a *api) UpdateMetricsJSON(w http.ResponseWriter, r *http.Request) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -182,7 +168,7 @@ func (a *api) UpdateMetricsJSON(w http.ResponseWriter, r *http.Request) error {
 
 	var rawMetrics []business.RawMetric
 
-	for _, m := range req.Metrics {
+	for _, m := range req {
 		metricNameStr := m.ID
 		metricTypeStr := m.MType
 
@@ -193,9 +179,9 @@ func (a *api) UpdateMetricsJSON(w http.ResponseWriter, r *http.Request) error {
 			w.WriteHeader(status)
 			return nil
 		} else if m.Delta != nil {
-			metricValueStr = fmt.Sprintf("%v", *m.Delta)
+			metricValueStr = fmt.Sprintf("%d", *m.Delta)
 		} else if m.Value != nil {
-			metricValueStr = fmt.Sprintf("%v", *m.Value)
+			metricValueStr = decimal.NewFromFloat(*m.Value).String()
 		}
 
 		rawMetrics = append(rawMetrics, business.RawMetric{
@@ -216,12 +202,7 @@ func (a *api) UpdateMetricsJSON(w http.ResponseWriter, r *http.Request) error {
 
 	for _, m := range updatedCounterMetrics {
 		delta := m.Delta.IntPart()
-		resp.Metrics = append(resp.Metrics, struct {
-			ID    string   `json:"id"`
-			MType string   `json:"type"`
-			Delta *int64   `json:"delta,omitempty"`
-			Value *float64 `json:"value,omitempty"`
-		}{
+		resp = append(resp, updateMetricResp{
 			ID:    m.ID,
 			MType: string(business.Counter),
 			Delta: &delta,
@@ -230,12 +211,7 @@ func (a *api) UpdateMetricsJSON(w http.ResponseWriter, r *http.Request) error {
 
 	for _, m := range updatedGaugeMetrics {
 		val := m.Value.InexactFloat64()
-		resp.Metrics = append(resp.Metrics, struct {
-			ID    string   `json:"id"`
-			MType string   `json:"type"`
-			Delta *int64   `json:"delta,omitempty"`
-			Value *float64 `json:"value,omitempty"`
-		}{
+		resp = append(resp, updateMetricResp{
 			ID:    m.ID,
 			MType: string(business.Gauge),
 			Value: &val,

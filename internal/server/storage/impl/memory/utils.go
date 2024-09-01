@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
-	"github.com/shopspring/decimal"
 )
 
 func (s *svc) Lock() {
@@ -22,12 +21,11 @@ func (s *svc) Ping(ctx context.Context) error {
 	return nil
 }
 
-type rawData struct {
-	Metrics []struct {
-		ID   string `json:"id"`
-		Type string `json:"type"`
-		Val  string `json:"val"`
-	}
+type rawData []struct {
+	ID    string  `json:"id"`
+	Type  string  `json:"type"`
+	Val   float64 `json:"val"`
+	Delta int64   `json:"delta"`
 }
 
 func (s *svc) Actualize(ctx context.Context) error {
@@ -54,26 +52,16 @@ func (s *svc) Actualize(ctx context.Context) error {
 		return err
 	}
 
-	metrics := make([]storage.Metric, 0, len(rawData.Metrics))
-	for _, m := range rawData.Metrics {
-		val, err := decimal.NewFromString(m.Val)
+	for _, m := range rawData {
+		err := s.Set(ctx, storage.Metric{
+			ID:    m.ID,
+			Type:  m.Type,
+			Val:   m.Val,
+			Delta: m.Delta,
+		})
 		if err != nil {
-			return fmt.Errorf("can't parse string to decimal, reason: %v", err)
+			return fmt.Errorf("can't set metrics to db, reason: %v", err)
 		}
-
-		metrics = append(
-			metrics,
-			storage.Metric{
-				ID:   m.ID,
-				Type: m.Type,
-				Val:  val,
-			},
-		)
-	}
-
-	err = s.Set(ctx, metrics)
-	if err != nil {
-		return fmt.Errorf("can't set metrics to db, reason: %v", err)
 	}
 
 	return nil
@@ -92,15 +80,17 @@ func (s *svc) Dump(ctx context.Context) error {
 
 	var rawData rawData
 	for _, m := range *metrics {
-		rawData.Metrics = append(
-			rawData.Metrics, struct {
-				ID   string `json:"id"`
-				Type string `json:"type"`
-				Val  string `json:"val"`
+		rawData = append(
+			rawData, struct {
+				ID    string  `json:"id"`
+				Type  string  `json:"type"`
+				Val   float64 `json:"val"`
+				Delta int64   `json:"delta"`
 			}{
-				ID:   m.ID,
-				Type: m.Type,
-				Val:  m.Val.String(),
+				ID:    m.ID,
+				Type:  m.Type,
+				Val:   m.Val,
+				Delta: m.Delta,
 			},
 		)
 	}

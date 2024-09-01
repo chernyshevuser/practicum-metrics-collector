@@ -20,8 +20,10 @@ func (s *svc) sendMetrics(ctx context.Context) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 
-		res := make([]Metric, len(s.metrics))
-		copy(res, s.metrics)
+		var res []Metric
+
+		res = append(res, s.metrics...)
+		res = append(res, s.extraMetrics...)
 
 		return res
 	}()
@@ -29,49 +31,53 @@ func (s *svc) sendMetrics(ctx context.Context) {
 	cl := http.Client{}
 	defer cl.CloseIdleConnections()
 
-	for _, m := range metrics {
-		err := s.sendWithRetry(ctx, &cl, m)
-		if err != nil {
-			if errors.Is(err, context.Canceled) {
-				return
-			}
-
-			s.logger.Errorw(
-				"can't send metric",
-				"name", m.ID,
-				"type", m.Type,
-				"val", m.Val,
-				"reason", err,
-			)
+	err := s.sendWithRetry(ctx, &cl, metrics)
+	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			return
 		}
+
+		s.logger.Errorw(
+			"can't send metrics",
+			"reason", err,
+		)
 	}
 }
 
-type SendReq struct {
+type unit struct {
 	ID    string   `json:"id"`
 	MType string   `json:"type"`
 	Delta *int64   `json:"delta,omitempty"`
 	Value *float64 `json:"value,omitempty"`
 }
 
-func (s *svc) sendWithRetry(ctx context.Context, cl *http.Client, m Metric) (err error) {
-	req := SendReq{
-		ID:    m.ID,
-		MType: m.Type,
-	}
+type sendReq []unit
 
-	if m.Type == string(business.CounterMT) {
-		valInt64 := m.Val.IntPart()
-		req.Delta = &valInt64
-	} else if m.Type == string(business.GaugeMT) {
-		valFloat64 := m.Val.InexactFloat64()
-		req.Value = &valFloat64
-	} else {
-		s.logger.Errorw(
-			"wrong metric type",
-			"type", m.Type,
-		)
-		return fmt.Errorf("wrong metric type")
+func (s *svc) sendWithRetry(ctx context.Context, cl *http.Client, metrics []Metric) (err error) {
+	var req sendReq
+
+	for _, m := range metrics {
+		u := unit{
+			ID:    m.ID,
+			MType: m.Type,
+		}
+
+		if m.Type == string(business.CounterMT) {
+			valInt64 := m.Val.IntPart()
+			u.Delta = &valInt64
+		} else if m.Type == string(business.GaugeMT) {
+			valFloat64 := m.Val.InexactFloat64()
+			u.Value = &valFloat64
+		} else {
+			s.logger.Errorw(
+				"wrong metric type",
+				"type", m.Type,
+				"ID", m.ID,
+			)
+			return fmt.Errorf("wrong metric type")
+		}
+
+		req = append(req, u)
 	}
 
 	reqByte, err := json.Marshal(req)
@@ -143,7 +149,6 @@ func (s *svc) sendWithRetry(ctx context.Context, cl *http.Client, m Metric) (err
 			return
 		}
 	}
-
 	if err != nil {
 		return err
 	}

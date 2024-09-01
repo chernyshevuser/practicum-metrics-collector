@@ -3,56 +3,58 @@ package db
 import (
 	"context"
 
+	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *svc) setQuery(ctx context.Context, tx pgx.Tx, metricId, metricType, metricVal string) error {
+func (s *svc) setQuery(ctx context.Context, tx pgx.Tx, key string, metric storage.Metric) error {
 	q := `
-		INSERT INTO Metrics ("id", "type", "val")
-		VALUES ($1, $2, $3)
-		ON CONFLICT ("id") DO 
-		UPDATE SET "val" = $3;
+		INSERT INTO Metrics ("key", "id", "type", "val", "delta")
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT ("key") DO 
+		UPDATE SET "val" = $4, "delta" = $5;
 	`
 
 	_, err := tx.Exec(
 		ctx,
 		q,
-		metricId,
-		metricType,
-		metricVal,
+		key,
+		metric.ID,
+		metric.Type,
+		metric.Val,
+		metric.Delta,
 	)
 
 	return err
 }
 
-func (s *svc) getQuery(ctx context.Context, tx pgx.Tx, metricId, metricType string) (metricValue string, err error) {
+func (s *svc) getQuery(ctx context.Context, tx pgx.Tx, key string) (metric storage.Metric, err error) {
 	q := `
-		SELECT val
+		SELECT "id", "type", "val", "delta"
 		FROM public.Metrics
-		WHERE "id" = $1 AND "type" = $2;
+		WHERE "key" = $1;
 	`
+
 	err = tx.QueryRow(
 		ctx,
 		q,
-		metricId,
-		metricType,
-	).Scan(&metricValue)
+		key,
+	).Scan(
+		&metric.Type,
+		&metric.ID,
+		&metric.Val,
+		&metric.Delta,
+	)
 	if err != nil {
-		return "", err
+		return storage.Metric{}, err
 	}
 
-	return metricValue, nil
+	return metric, nil
 }
 
-type rawMetric struct {
-	ID   string
-	Type string
-	Val  string
-}
-
-func (s *svc) getAllQuery(ctx context.Context, tx pgx.Tx) ([]rawMetric, error) {
+func (s *svc) getAllQuery(ctx context.Context, tx pgx.Tx) ([]storage.Metric, error) {
 	q := `
-		SELECT *
+		SELECT "id", "type", "val", "delta"
 		FROM public.Metrics;
 	`
 	rows, err := tx.Query(
@@ -60,30 +62,31 @@ func (s *svc) getAllQuery(ctx context.Context, tx pgx.Tx) ([]rawMetric, error) {
 		q,
 	)
 	if err != nil {
-		return []rawMetric{}, err
+		return []storage.Metric{}, err
 	}
 	defer rows.Close()
 
-	var rawMetrics []rawMetric
+	var metrics []storage.Metric
 
 	for rows.Next() {
-		rm := rawMetric{}
+		m := storage.Metric{}
 		err = rows.Scan(
-			&rm.ID,
-			&rm.Type,
-			&rm.Val,
+			&m.ID,
+			&m.Type,
+			&m.Val,
+			&m.Delta,
 		)
 		if err != nil {
-			return []rawMetric{}, err
+			return []storage.Metric{}, err
 		}
 
-		rawMetrics = append(rawMetrics, rm)
+		metrics = append(metrics, m)
 	}
 
 	err = rows.Err()
 	if err != nil {
-		return []rawMetric{}, err
+		return []storage.Metric{}, err
 	}
 
-	return rawMetrics, nil
+	return metrics, nil
 }

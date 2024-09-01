@@ -7,11 +7,15 @@ import (
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/agent/business"
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/agent/constants"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/mem"
 	"github.com/shopspring/decimal"
 )
 
 func (s *svc) collectMetrics() {
 	metrics := make([]Metric, 0, constants.MetricsCount)
+
+	metrics = append(metrics, s.getMetrics()...)
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -23,8 +27,6 @@ func (s *svc) collectMetrics() {
 		Type: string(business.CounterMT),
 		Val:  s.pollCount,
 	})
-
-	metrics = append(metrics, s.getMetrics()...)
 
 	s.metrics = metrics
 }
@@ -182,4 +184,49 @@ func (s *svc) getMetrics() []Metric {
 	)
 
 	return metrics
+}
+
+func (s *svc) collectExtraMetrics() {
+	metrics := make([]Metric, 0, constants.ExtraMetricsCount)
+
+	v, err := mem.VirtualMemory()
+	if err != nil {
+		s.logger.Errorw(
+			"can't get virtual memory",
+			"reason", err,
+		)
+		return
+	}
+
+	cpuPercentages, err := cpu.Percent(0, false)
+	if err != nil {
+		s.logger.Errorw(
+			"can't get CPU info",
+			"reason", err,
+		)
+		return
+	}
+
+	metrics = append(metrics, []Metric{
+		{
+			ID:   "TotalMemory",
+			Type: string(business.GaugeMT),
+			Val:  decimal.NewFromBigInt(new(big.Int).SetUint64(v.Total/1024/1024), 0),
+		},
+		{
+			ID:   "FreeMemory",
+			Type: string(business.GaugeMT),
+			Val:  decimal.NewFromBigInt(new(big.Int).SetUint64(v.Free/1024/1024), 0),
+		},
+		{
+			ID:   "CPUutilization1",
+			Type: string(business.GaugeMT),
+			Val:  decimal.NewFromFloat(cpuPercentages[0]),
+		},
+	}...)
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.extraMetrics = metrics
 }
