@@ -19,7 +19,6 @@ func main() {
 	logger := logger.New()
 	defer logger.Sync()
 
-	//TODO fix
 	config.Setup(logger)
 
 	agentSvc := impl.New(
@@ -28,6 +27,7 @@ func main() {
 		config.ReportInterval,
 		config.HashKey,
 		fmt.Sprintf("http://%s/updates/", config.Addr),
+		config.RateLimit,
 	)
 	defer agentSvc.Close()
 

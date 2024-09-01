@@ -20,8 +20,10 @@ func (s *svc) sendMetrics(ctx context.Context) {
 		s.mu.Lock()
 		defer s.mu.Unlock()
 
-		res := make([]Metric, len(s.metrics))
-		copy(res, s.metrics)
+		var res []Metric
+
+		res = append(res, s.metrics...)
+		res = append(res, s.extraMetrics...)
 
 		return res
 	}()
@@ -70,6 +72,7 @@ func (s *svc) sendWithRetry(ctx context.Context, cl *http.Client, metrics []Metr
 			s.logger.Errorw(
 				"wrong metric type",
 				"type", m.Type,
+				"ID", m.ID,
 			)
 			return fmt.Errorf("wrong metric type")
 		}

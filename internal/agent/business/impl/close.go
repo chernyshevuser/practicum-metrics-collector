@@ -6,5 +6,7 @@ func (s *svc) Close() {
 
 	s.wg.Wait()
 
+	s.semaphore.Close()
+
 	s.logger.Info("goodbye from agent-svc")
 }
