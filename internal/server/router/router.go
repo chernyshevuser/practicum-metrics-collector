@@ -19,7 +19,6 @@ const (
 	PingDB                 string = "/ping"
 )
 
-// TODO check method GET/POST
 func SetupRouter(api handler.API, router *mux.Router, logger logger.Logger) {
 	router.HandleFunc(UpdateMetricPath, middleware.Accept(api.UpdateMetric, logger)).Methods(http.MethodPost)
 	router.HandleFunc(UpdateMetricJSONPath, middleware.Accept(api.UpdateMetricJSON, logger)).Methods(http.MethodPost)

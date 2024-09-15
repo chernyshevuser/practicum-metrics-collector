@@ -35,3 +35,32 @@ func TestEncrypt(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkEncrypt(b *testing.B) {
+	key := "thisis32bitlongpassphraseimusing"
+	text := "This is a test string for encryption"
+
+	for i := 0; i < b.N; i++ {
+		_, err := Encrypt(key, text)
+		if err != nil {
+			b.Errorf("Failed to encrypt: %v", err)
+		}
+	}
+}
+
+func BenchmarkDecrypt(b *testing.B) {
+	key := "thisis32bitlongpassphraseimusing"
+	text := "This is a test string for encryption"
+
+	encryptedText, err := Encrypt(key, text)
+	if err != nil {
+		b.Fatalf("Failed to encrypt: %v", err)
+	}
+
+	for i := 0; i < b.N; i++ {
+		_, err := Decrypt(key, encryptedText)
+		if err != nil {
+			b.Errorf("Failed to decrypt: %v", err)
+		}
+	}
+}
