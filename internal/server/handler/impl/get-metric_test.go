@@ -112,6 +112,8 @@ func TestGetMetricValue(t *testing.T) {
 			assert.Equal(t, test.want.code, res.StatusCode)
 			body, _ := io.ReadAll(res.Body)
 			assert.Equal(t, test.want.body, string(body))
+
+			businessSvc.AssertExpectations(t)
 		})
 	}
 }
