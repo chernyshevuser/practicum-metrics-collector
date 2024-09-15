@@ -1,42 +1,34 @@
-package impl
+package impl_test
 
 import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"os/signal"
-	"syscall"
 	"testing"
 
-	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 	"github.com/test-go/testify/assert"
 
 	businessimpl "github.com/chernyshevuser/practicum-metrics-collector/internal/server/business/impl"
+	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/handler/impl"
 	storageimpl "github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage/impl"
 )
 
 func TestUpdateMetric(t *testing.T) {
-	mainCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-	defer stop()
-
-	logger := logger.New()
+	logger := &MockLogger{}
 	defer logger.Sync()
+	logger.On("Info", []interface{}{"goodbye from business-svc"}).Return()
+	logger.On("Info", []interface{}{"goodbye from db-svc"}).Return()
 
-	dbSvc, err := storageimpl.New(mainCtx, logger)
+	dbSvc, err := storageimpl.New(context.TODO(), logger)
 	if err != nil {
-		logger.Errorw(
-			"cant create db svc",
-			"reason", err,
-		)
-		panic("db initialization failed")
+		t.Errorf("cant create db svc: %v", err)
 	}
 	defer dbSvc.Close()
 
 	businessSvc := businessimpl.New(dbSvc, logger)
 	defer businessSvc.Close()
 
-	svc := New(businessSvc, logger)
+	svc := impl.New(businessSvc, logger)
 
 	type want struct {
 		code        int
