@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *svc) Get(ctx context.Context, key string) (*storage.Metric, error) {
+func (s *svc) Get(ctx context.Context, key uint64) (*storage.Metric, error) {
 	var metric storage.Metric
 
 	if r := s.wrap(func() error {

@@ -10,19 +10,19 @@ import (
 func TestStorage_SetAndGet(t *testing.T) {
 	store := defaultstorage.New[string]()
 
-	key := "key"
+	key := uint64(1)
 	val := "val"
 	store.Set(key, val)
 
 	received, exists := store.Get(key)
 	if !exists {
-		t.Errorf("expected key '%s' to exist", key)
+		t.Errorf("expected key '%v' to exist", key)
 	}
 	if received != val {
 		t.Errorf("expected value '%s', got '%v'", val, received)
 	}
 
-	_, exists = store.Get("non-existing-key")
+	_, exists = store.Get(uint64(2))
 	if exists {
 		t.Error("expected non-existing key to return false for exists")
 	}
@@ -36,9 +36,9 @@ func TestStorage_GetAll(t *testing.T) {
 		t.Errorf("expected empty slice, got length %d", len(all))
 	}
 
-	store.Set("key1", "value1")
-	store.Set("key2", "value2")
-	store.Set("key3", "value3")
+	store.Set(1, "value1")
+	store.Set(2, "value2")
+	store.Set(3, "value3")
 
 	all = store.GetAll()
 	if len(all) != 3 {
@@ -61,9 +61,9 @@ func TestStorage_GetAll(t *testing.T) {
 func TestStorage_ConcurrentAccess(t *testing.T) {
 	store := defaultstorage.New[int]()
 
-	key1 := "key1"
-	key2 := "key2"
-	key3 := "key3"
+	key1 := uint64(1)
+	key2 := uint64(2)
+	key3 := uint64(3)
 	val1 := 100
 	val2 := 200
 	val3 := 300
@@ -88,14 +88,14 @@ func TestStorage_ConcurrentAccess(t *testing.T) {
 
 	_, exists := store.Get(key1)
 	if !exists {
-		t.Errorf("expected key '%s' to exist", key1)
+		t.Errorf("expected key '%v' to exist", key1)
 	}
 	_, exists = store.Get(key2)
 	if !exists {
-		t.Errorf("expected key '%s' to exist", key2)
+		t.Errorf("expected key '%v' to exist", key2)
 	}
 	_, exists = store.Get(key3)
 	if !exists {
-		t.Errorf("expected key '%s' to exist", key3)
+		t.Errorf("expected key '%v' to exist", key3)
 	}
 }

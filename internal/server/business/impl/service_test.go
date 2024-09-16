@@ -82,7 +82,7 @@ func (m *MockStorage) Set(ctx context.Context, metric storage.Metric) error {
 	return args.Error(0)
 }
 
-func (m *MockStorage) Get(ctx context.Context, key string) (*storage.Metric, error) {
+func (m *MockStorage) Get(ctx context.Context, key uint64) (*storage.Metric, error) {
 	args := m.Called(ctx, key)
 	if metric, ok := args.Get(0).(*storage.Metric); ok {
 		return metric, args.Error(1)

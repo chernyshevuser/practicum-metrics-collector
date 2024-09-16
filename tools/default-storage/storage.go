@@ -5,25 +5,25 @@ import (
 )
 
 type Storage struct {
-	data map[string]any
+	data map[uint64]any
 	mu   *sync.Mutex
 }
 
 func New[T any]() *Storage {
 	return &Storage{
-		data: make(map[string]any),
+		data: make(map[uint64]any),
 		mu:   &sync.Mutex{},
 	}
 }
 
-func (s *Storage) Set(key string, val any) {
+func (s *Storage) Set(key uint64, val any) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	s.data[key] = val
 }
 
-func (s *Storage) Get(key string) (val any, exists bool) {
+func (s *Storage) Get(key uint64) (val any, exists bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
