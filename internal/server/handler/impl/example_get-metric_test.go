@@ -1,4 +1,4 @@
-package impl_test
+package impl
 
 import (
 	"bytes"
@@ -9,7 +9,6 @@ import (
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/business"
 	mockbusiness "github.com/chernyshevuser/practicum-metrics-collector/internal/server/business/mock"
-	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/handler/impl"
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/router"
 	mocklogger "github.com/chernyshevuser/practicum-metrics-collector/tools/logger/mock"
 	"github.com/golang/mock/gomock"
@@ -28,7 +27,7 @@ func ExampleGetMetricValueJSON() {
 	val := decimal.NewFromInt(123)
 	businessSvc.EXPECT().GetMetricValue(gomock.Any(), "counter", "some_id").Return(&val, business.Counter, nil)
 
-	svc := impl.New(businessSvc, logger)
+	svc := New(businessSvc, logger)
 
 	reqBody := `{
 		"id": "some_id",
@@ -63,7 +62,7 @@ func ExampleGetAllMetrics() {
 
 	businessSvc.EXPECT().GetAllMetrics(gomock.Any()).Return([]business.CounterMetric{}, []business.GaugeMetric{}, nil)
 
-	svc := impl.New(businessSvc, logger)
+	svc := New(businessSvc, logger)
 	_ = svc
 
 	req := httptest.NewRequest(http.MethodGet, router.GetAllMetricsPath, nil)
@@ -93,7 +92,7 @@ func ExampleGetMetricValue() {
 	val := decimal.NewFromInt(123)
 	businessSvc.EXPECT().GetMetricValue(gomock.Any(), "counter", "some_name").Return(&val, business.Counter, nil)
 
-	svc := impl.New(businessSvc, logger)
+	svc := New(businessSvc, logger)
 
 	req := httptest.NewRequest(http.MethodGet, router.GetMetricValuePath, nil)
 	req = mux.SetURLVars(req, map[string]string{

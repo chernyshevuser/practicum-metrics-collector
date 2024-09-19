@@ -1,4 +1,4 @@
-package impl_test
+package impl
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 	"net/http/httptest"
 
 	mockbusiness "github.com/chernyshevuser/practicum-metrics-collector/internal/server/business/mock"
-	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/handler/impl"
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/router"
 	mocklogger "github.com/chernyshevuser/practicum-metrics-collector/tools/logger/mock"
 	"github.com/golang/mock/gomock"
@@ -21,7 +20,7 @@ func ExamplePingDB() {
 	businessSvc := mockbusiness.NewMockMetricsCollector(ctrl)
 	businessSvc.EXPECT().PingDB(gomock.Any()).Return(nil)
 
-	svc := impl.New(businessSvc, logger)
+	svc := New(businessSvc, logger)
 
 	req := httptest.NewRequest(http.MethodGet, router.PingDB, nil)
 	w := httptest.NewRecorder()
