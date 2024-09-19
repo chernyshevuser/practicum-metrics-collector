@@ -15,8 +15,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// ExampleUpdateMetricJSON demonstrates how to use UpdateMetricJSON handler.
-func ExampleUpdateMetricJSON() {
+// Example_api_UpdateMetricJSON demonstrates how to use UpdateMetricJSON handler.
+func Example_api_UpdateMetricJSON() {
 	ctrl := gomock.NewController(nil)
 	defer ctrl.Finish()
 
@@ -70,8 +70,8 @@ func ExampleUpdateMetricJSON() {
 	// 200
 }
 
-// ExampleUpdateMetricsJSON demonstrates how to use UpdateMetricsJSON handler.
-func ExampleUpdateMetricsJSON() {
+// Example_api_UpdateMetricsJSON demonstrates how to use UpdateMetricsJSON handler.
+func Example_api_UpdateMetricsJSON() {
 	ctrl := gomock.NewController(nil)
 	defer ctrl.Finish()
 

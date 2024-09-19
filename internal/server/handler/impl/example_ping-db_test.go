@@ -11,8 +11,8 @@ import (
 	"github.com/golang/mock/gomock"
 )
 
-// ExamplePingDB demonstrates how to use PingDB handler.
-func ExamplePingDB() {
+// Example_api_PingDB demonstrates how to use PingDB handler.
+func Example_api_PingDB() {
 	ctrl := gomock.NewController(nil)
 	defer ctrl.Finish()
 

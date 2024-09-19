@@ -16,8 +16,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// ExampleGetMetricValueJSON demonstrates how to use GetMetricValueJSON handler.
-func ExampleGetMetricValueJSON() {
+// Example_api_GetMetricValueJSON demonstrates how to use GetMetricValueJSON handler.
+func Example_api_GetMetricValueJSON() {
 	ctrl := gomock.NewController(nil)
 	defer ctrl.Finish()
 
@@ -52,8 +52,8 @@ func ExampleGetMetricValueJSON() {
 	// {"id":"some_id","type":"counter","delta":123}
 }
 
-// ExampleGetAllMetrics demonstrates how to use GetAllMetrics handler.
-func ExampleGetAllMetrics() {
+// Example_api_GetAllMetrics demonstrates how to use GetAllMetrics handler.
+func Example_api_GetAllMetrics() {
 	ctrl := gomock.NewController(nil)
 	defer ctrl.Finish()
 
@@ -82,8 +82,8 @@ func ExampleGetAllMetrics() {
 	// [<html><body><h1></h1><ul> </ul></body></html>]
 }
 
-// ExampleGetMetricValue demonstrates how to use GetMetricValue handler.
-func ExampleGetMetricValue() {
+// Example_api_GetMetricValue demonstrates how to use GetMetricValue handler.
+func Example_api_GetMetricValue() {
 	ctrl := gomock.NewController(nil)
 	defer ctrl.Finish()
 
