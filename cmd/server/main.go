@@ -16,7 +16,7 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/config"
-	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
+	logger "github.com/chernyshevuser/practicum-metrics-collector/tools/logger/impl"
 	"github.com/gorilla/mux"
 	"golang.org/x/sync/errgroup"
 )

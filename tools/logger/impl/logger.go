@@ -1,30 +1,12 @@
-package logger
+package impl
 
 import (
+	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-type Logger interface {
-	Debugf(format string, args ...interface{})
-	Infof(format string, args ...interface{})
-	Warnf(format string, args ...interface{})
-	Errorf(format string, args ...interface{})
-
-	Debugw(msg string, keysAndValues ...interface{})
-	Infow(msg string, keysAndValues ...interface{})
-	Warnw(msg string, keysAndValues ...interface{})
-	Errorw(msg string, keysAndValues ...interface{})
-
-	Debug(args ...interface{})
-	Info(args ...interface{})
-	Warn(args ...interface{})
-	Error(args ...interface{})
-
-	Sync() error
-}
-
-func New(opts ...zap.Option) Logger {
+func New(opts ...zap.Option) logger.Logger {
 	cfg := zap.NewProductionConfig()
 	cfg.EncoderConfig = encoderConfig()
 

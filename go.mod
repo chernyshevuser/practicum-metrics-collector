@@ -3,6 +3,7 @@ module github.com/chernyshevuser/practicum-metrics-collector
 go 1.21.1
 
 require (
+	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.1
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438

@@ -6,18 +6,25 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/test-go/testify/assert"
 
 	businessimpl "github.com/chernyshevuser/practicum-metrics-collector/internal/server/business/impl"
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/handler/impl"
 	storageimpl "github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage/impl"
+	mocklogger "github.com/chernyshevuser/practicum-metrics-collector/tools/logger/mock"
 )
 
 func TestUpdateMetric(t *testing.T) {
-	logger := &MockLogger{}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	logger := mocklogger.NewMockLogger(ctrl)
 	defer logger.Sync()
-	logger.On("Info", []interface{}{"goodbye from business-svc"}).Return()
-	logger.On("Info", []interface{}{"goodbye from db-svc"}).Return()
+
+	logger.EXPECT().Info("goodbye from business-svc").Times(1)
+	logger.EXPECT().Info("goodbye from db-svc").Times(1)
+	logger.EXPECT().Sync().Times(1)
 
 	dbSvc, err := storageimpl.New(context.TODO(), logger)
 	if err != nil {

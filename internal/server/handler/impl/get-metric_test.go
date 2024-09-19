@@ -11,18 +11,28 @@ import (
 	"testing"
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/business"
+	mockbusiness "github.com/chernyshevuser/practicum-metrics-collector/internal/server/business/mock"
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/handler/impl"
+	mocklogger "github.com/chernyshevuser/practicum-metrics-collector/tools/logger/mock"
+	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/shopspring/decimal"
 	"github.com/test-go/testify/assert"
-	"github.com/test-go/testify/mock"
 )
 
 func TestGetMetricValue(t *testing.T) {
-	businessSvc := &MockBusinessSvc{}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	businessSvc := mockbusiness.NewMockMetricsCollector(ctrl)
 	defer businessSvc.Close()
-	logger := &MockLogger{}
+
+	businessSvc.EXPECT().Close().Times(1)
+
+	logger := mocklogger.NewMockLogger(ctrl)
 	defer logger.Sync()
+
+	logger.EXPECT().Sync().Times(1)
 
 	svc := impl.New(businessSvc, logger)
 
@@ -47,8 +57,7 @@ func TestGetMetricValue(t *testing.T) {
 			mname: "sample_text",
 			mockResp: func() {
 				val := decimal.NewFromInt(123)
-				businessSvc.On("GetMetricValue", mock.Anything, "counter", "sample_text").
-					Return(&val, business.Counter, nil)
+				businessSvc.EXPECT().GetMetricValue(gomock.Any(), "counter", "sample_text").Return(&val, business.Counter, nil)
 			},
 			want: want{
 				code:        http.StatusOK,
@@ -62,8 +71,7 @@ func TestGetMetricValue(t *testing.T) {
 			mtype: "counter",
 			mname: "sample_text_not_found",
 			mockResp: func() {
-				businessSvc.On("GetMetricValue", mock.Anything, "counter", "sample_text_not_found").
-					Return(nil, business.Counter, nil)
+				businessSvc.EXPECT().GetMetricValue(gomock.Any(), "counter", "sample_text_not_found").Return(nil, business.Counter, nil)
 			},
 			want: want{
 				code:        http.StatusNotFound,
@@ -77,8 +85,7 @@ func TestGetMetricValue(t *testing.T) {
 			mtype: "counter",
 			mname: "error_from_svc",
 			mockResp: func() {
-				businessSvc.On("GetMetricValue", mock.Anything, "counter", "error_from_svc").
-					Return(nil, business.Counter, fmt.Errorf("mock error"))
+				businessSvc.EXPECT().GetMetricValue(gomock.Any(), "counter", "error_from_svc").Return(nil, business.Counter, fmt.Errorf("mock error"))
 			},
 			want: want{
 				code:        http.StatusOK,
@@ -112,17 +119,23 @@ func TestGetMetricValue(t *testing.T) {
 			assert.Equal(t, test.want.code, res.StatusCode)
 			body, _ := io.ReadAll(res.Body)
 			assert.Equal(t, test.want.body, string(body))
-
-			businessSvc.AssertExpectations(t)
 		})
 	}
 }
 
 func TestGetMetricValueJSON(t *testing.T) {
-	businessSvc := &MockBusinessSvc{}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	businessSvc := mockbusiness.NewMockMetricsCollector(ctrl)
 	defer businessSvc.Close()
-	logger := &MockLogger{}
+
+	businessSvc.EXPECT().Close().Times(1)
+
+	logger := mocklogger.NewMockLogger(ctrl)
 	defer logger.Sync()
+
+	logger.EXPECT().Sync().Times(1)
 
 	svc := impl.New(businessSvc, logger)
 
@@ -153,8 +166,7 @@ func TestGetMetricValueJSON(t *testing.T) {
 			},
 			mockResp: func() {
 				val := decimal.NewFromInt(123)
-				businessSvc.On("GetMetricValue", mock.Anything, "counter", "sample_text").
-					Return(&val, business.Counter, nil)
+				businessSvc.EXPECT().GetMetricValue(gomock.Any(), "counter", "sample_text").Return(&val, business.Counter, nil)
 			},
 			want: want{
 				code:        http.StatusOK,
@@ -170,8 +182,7 @@ func TestGetMetricValueJSON(t *testing.T) {
 			},
 			mockResp: func() {
 				val := decimal.NewFromFloat(123.45)
-				businessSvc.On("GetMetricValue", mock.Anything, "gauge", "sample_text").
-					Return(&val, business.Gauge, nil)
+				businessSvc.EXPECT().GetMetricValue(gomock.Any(), "gauge", "sample_text").Return(&val, business.Gauge, nil)
 			},
 			want: want{
 				code:        http.StatusOK,
@@ -186,8 +197,7 @@ func TestGetMetricValueJSON(t *testing.T) {
 				MType: "counter",
 			},
 			mockResp: func() {
-				businessSvc.On("GetMetricValue", mock.Anything, "counter", "sample_text_not_found").
-					Return(nil, business.Counter, nil)
+				businessSvc.EXPECT().GetMetricValue(gomock.Any(), "counter", "sample_text_not_found").Return(nil, business.Counter, nil)
 			},
 			want: want{
 				code:        http.StatusNotFound,
@@ -202,8 +212,7 @@ func TestGetMetricValueJSON(t *testing.T) {
 				MType: "counter",
 			},
 			mockResp: func() {
-				businessSvc.On("GetMetricValue", mock.Anything, "counter", "sample_text_err_from_svc").
-					Return(nil, business.Counter, fmt.Errorf("mock error"))
+				businessSvc.EXPECT().GetMetricValue(gomock.Any(), "counter", "sample_text_err_from_svc").Return(nil, business.Counter, fmt.Errorf("mock error"))
 			},
 			want: want{
 				code:        http.StatusOK, // changes in middleware
@@ -219,8 +228,7 @@ func TestGetMetricValueJSON(t *testing.T) {
 			},
 			mockResp: func() {
 				val := decimal.NewFromInt(123)
-				businessSvc.On("GetMetricValue", mock.Anything, "unknown", "sample_text").
-					Return(&val, business.Unknown, fmt.Errorf("mock error"))
+				businessSvc.EXPECT().GetMetricValue(gomock.Any(), "unknown", "sample_text").Return(&val, business.Unknown, fmt.Errorf("mock error"))
 			},
 			want: want{
 				code:        http.StatusOK, // changes in middleware

@@ -1,3 +1,4 @@
+// Package crypto provides encrypt/decrypt methods.
 package crypto
 
 import (
@@ -11,7 +12,7 @@ import (
 	"io"
 )
 
-// Encrypt encrypts a string using AES
+// Encrypt encrypts a string using AES.
 func Encrypt(key, text string) (string, error) {
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
@@ -32,7 +33,7 @@ func Encrypt(key, text string) (string, error) {
 	return base64.URLEncoding.EncodeToString(ciphertext), nil
 }
 
-// Decrypt decrypts a string using AES
+// Decrypt decrypts a string using AES.
 func Decrypt(key, cryptoText string) (string, error) {
 	ciphertext, err := base64.URLEncoding.DecodeString(cryptoText)
 	if err != nil {

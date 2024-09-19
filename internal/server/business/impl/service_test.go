@@ -8,128 +8,29 @@ import (
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/business"
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/business/impl"
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
+	mockstorage "github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage/mock"
+	mocklogger "github.com/chernyshevuser/practicum-metrics-collector/tools/logger/mock"
+	"github.com/golang/mock/gomock"
 	"github.com/shopspring/decimal"
 	"github.com/test-go/testify/assert"
 	"github.com/test-go/testify/mock"
 )
 
-type MockLogger struct {
-	mock.Mock
-}
-
-func (m *MockLogger) Debugf(format string, args ...interface{}) {
-	m.Called(format, args)
-}
-
-func (m *MockLogger) Infof(format string, args ...interface{}) {
-	m.Called(format, args)
-}
-
-func (m *MockLogger) Warnf(format string, args ...interface{}) {
-	m.Called(format, args)
-}
-
-func (m *MockLogger) Errorf(format string, args ...interface{}) {
-	m.Called(format, args)
-}
-
-func (m *MockLogger) Debugw(msg string, keysAndValues ...interface{}) {
-	m.Called(msg, keysAndValues)
-}
-
-func (m *MockLogger) Infow(msg string, keysAndValues ...interface{}) {
-	m.Called(msg, keysAndValues)
-}
-
-func (m *MockLogger) Warnw(msg string, keysAndValues ...interface{}) {
-	m.Called(msg, keysAndValues)
-}
-
-func (m *MockLogger) Errorw(msg string, keysAndValues ...interface{}) {
-	// m.Called(msg, keysAndValues)
-}
-
-func (m *MockLogger) Debug(args ...interface{}) {
-	m.Called(args)
-}
-
-func (m *MockLogger) Info(args ...interface{}) {
-	m.Called(args)
-}
-
-func (m *MockLogger) Warn(args ...interface{}) {
-	m.Called(args)
-}
-
-func (m *MockLogger) Error(args ...interface{}) {
-	m.Called(args)
-}
-
-func (m *MockLogger) Sync() error {
-	return nil
-}
-
 type MockBusinessSvc struct {
 	mock.Mock
 }
 
-type MockStorage struct {
-	mock.Mock
-}
-
-func (m *MockStorage) Set(ctx context.Context, metric storage.Metric) error {
-	args := m.Called(ctx, metric)
-	return args.Error(0)
-}
-
-func (m *MockStorage) Get(ctx context.Context, key uint64) (*storage.Metric, error) {
-	args := m.Called(ctx, key)
-	if metric, ok := args.Get(0).(*storage.Metric); ok {
-		return metric, args.Error(1)
-	}
-	return nil, args.Error(1)
-}
-
-func (m *MockStorage) GetAll(ctx context.Context) (*[]storage.Metric, error) {
-	args := m.Called(ctx)
-	if metrics, ok := args.Get(0).(*[]storage.Metric); ok {
-		return metrics, args.Error(1)
-	}
-	return nil, args.Error(1)
-}
-
-func (m *MockStorage) Lock() {
-	m.Called()
-}
-
-func (m *MockStorage) Unlock() {
-	m.Called()
-}
-
-func (m *MockStorage) Actualize(ctx context.Context) error {
-	args := m.Called(ctx)
-	return args.Error(0)
-}
-
-func (m *MockStorage) Dump(ctx context.Context) error {
-	args := m.Called(ctx)
-	return args.Error(0)
-}
-
-func (m *MockStorage) Ping(ctx context.Context) error {
-	args := m.Called(ctx)
-	return args.Error(0)
-}
-
-func (m *MockStorage) Close() error {
-	args := m.Called()
-	return args.Error(0)
-}
-
 func TestGetMetricValue(t *testing.T) {
-	ctx := context.TODO()
-	st := &MockStorage{}
-	logger := &MockLogger{}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	st := mockstorage.NewMockStorage(ctrl)
+	defer st.Close()
+	st.EXPECT().Close().Times(1)
+
+	logger := mocklogger.NewMockLogger(ctrl)
+	defer logger.Sync()
+	logger.EXPECT().Sync().Times(1)
 
 	svc := impl.New(st, logger)
 
@@ -147,9 +48,9 @@ func TestGetMetricValue(t *testing.T) {
 			metricType: "counter",
 			metricName: "sample_counter",
 			mockSetup: func() {
-				st.On("Lock").Return()
-				st.On("Unlock").Return()
-				st.On("Get", mock.Anything, storage.BuildKey("sample_counter", "counter")).Return(&storage.Metric{Delta: 123}, nil)
+				st.EXPECT().Lock().Times(1)
+				st.EXPECT().Unlock().Times(1)
+				st.EXPECT().Get(gomock.Any(), storage.BuildKey("sample_counter", "counter")).Return(&storage.Metric{Delta: 123}, nil)
 			},
 			expectedValue:      decimal.NewFromInt(123),
 			expectedMetricType: business.Counter,
@@ -160,9 +61,9 @@ func TestGetMetricValue(t *testing.T) {
 			metricType: "gauge",
 			metricName: "sample_gauge",
 			mockSetup: func() {
-				st.On("Lock").Return()
-				st.On("Unlock").Return()
-				st.On("Get", mock.Anything, storage.BuildKey("sample_gauge", "gauge")).Return(&storage.Metric{Val: 123.45}, nil)
+				st.EXPECT().Lock().Times(1)
+				st.EXPECT().Unlock().Times(1)
+				st.EXPECT().Get(gomock.Any(), storage.BuildKey("sample_gauge", "gauge")).Times(1).Return(&storage.Metric{Val: 123.45}, nil)
 			},
 			expectedValue:      decimal.NewFromFloat(123.45),
 			expectedMetricType: business.Gauge,
@@ -173,7 +74,8 @@ func TestGetMetricValue(t *testing.T) {
 			metricType: "unknown",
 			metricName: "invalid_metric",
 			mockSetup: func() {
-				logger.On("Infow", "parse metric", "given type", "unknown", "parsed type", business.Unknown, "given name", "invalid_metric").Return()
+				st.EXPECT().Lock().Times(1)
+				st.EXPECT().Unlock().Times(1)
 			},
 			expectedValue:      decimal.Decimal{},
 			expectedMetricType: "",
@@ -184,13 +86,10 @@ func TestGetMetricValue(t *testing.T) {
 			metricType: "counter",
 			metricName: "error_metric",
 			mockSetup: func() {
-				st.On("Lock").Return()
-				st.On("Unlock").Return()
-
-				st.On("Get", mock.Anything, storage.BuildKey("error_metric", "counter")).Return(nil, fmt.Errorf("db error"))
-
-				logger.On("Infow", "parse metric", "given type", "counter", "parsed type", business.Counter, "given name", "error_metric").Return()
-				logger.On("Errorw", "storage problem", "msg", "can't get counter metric val", "reason", mock.Anything).Return()
+				st.EXPECT().Lock().Times(1)
+				st.EXPECT().Unlock().Times(1)
+				st.EXPECT().Get(gomock.Any(), storage.BuildKey("error_metric", "counter")).Return(nil, fmt.Errorf("db error")).Times(1)
+				logger.EXPECT().Errorw("storage problem", "msg", "can't get counter metric val", "reason", gomock.Any()).Times(1)
 			},
 			expectedValue:      decimal.Decimal{},
 			expectedMetricType: "",
@@ -202,7 +101,7 @@ func TestGetMetricValue(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.mockSetup()
 
-			val, metricType, err := svc.GetMetricValue(ctx, tt.metricType, tt.metricName)
+			val, metricType, err := svc.GetMetricValue(context.TODO(), tt.metricType, tt.metricName)
 
 			if tt.expectError {
 				assert.Error(t, err)
@@ -211,8 +110,6 @@ func TestGetMetricValue(t *testing.T) {
 				assert.Equal(t, tt.expectedValue, *val)
 				assert.Equal(t, tt.expectedMetricType, metricType)
 			}
-
-			st.AssertExpectations(t)
 		})
 	}
 }
