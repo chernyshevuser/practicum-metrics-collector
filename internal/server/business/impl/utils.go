@@ -4,7 +4,7 @@ import (
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/business"
 )
 
-func (s *svc) parseMetricType(in string) business.MetricType {
+func parseMetricType(in string) business.MetricType {
 	if in == string(business.Counter) {
 		return business.Counter
 	}

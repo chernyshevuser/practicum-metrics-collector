@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (s *svc) setQuery(ctx context.Context, tx pgx.Tx, key string, metric storage.Metric) error {
+func (s *svc) setQuery(ctx context.Context, tx pgx.Tx, key uint64, metric storage.Metric) error {
 	q := `
 		INSERT INTO Metrics ("key", "id", "type", "val", "delta")
 		VALUES ($1, $2, $3, $4, $5)
@@ -28,7 +28,7 @@ func (s *svc) setQuery(ctx context.Context, tx pgx.Tx, key string, metric storag
 	return err
 }
 
-func (s *svc) getQuery(ctx context.Context, tx pgx.Tx, key string) (metric storage.Metric, err error) {
+func (s *svc) getQuery(ctx context.Context, tx pgx.Tx, key uint64) (metric storage.Metric, err error) {
 	q := `
 		SELECT "id", "type", "val", "delta"
 		FROM public.Metrics

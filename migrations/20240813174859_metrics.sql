@@ -1,7 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE  public.Metrics (
-    "key" TEXT PRIMARY KEY,
+    "key" BIGINT PRIMARY KEY,
     "id" TEXT,
     "type" TEXT,
     "val" DOUBLE PRECISION DEFAULT 0,

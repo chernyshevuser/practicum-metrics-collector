@@ -13,14 +13,7 @@ func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string)
 	s.db.Lock()
 	defer s.db.Unlock()
 
-	t := s.parseMetricType(metricType)
-
-	s.logger.Infow(
-		"parse metric",
-		"given type", metricType,
-		"parsed type", t,
-		"given name", metricName,
-	)
+	t := parseMetricType(metricType)
 
 	//case unknown
 	if t == business.Unknown {

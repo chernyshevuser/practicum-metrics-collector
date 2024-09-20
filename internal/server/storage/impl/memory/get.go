@@ -7,7 +7,7 @@ import (
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage"
 )
 
-func (s *svc) Get(ctx context.Context, key string) (*storage.Metric, error) {
+func (s *svc) Get(ctx context.Context, key uint64) (*storage.Metric, error) {
 	stored, ok := s.storage.Get(key)
 	if !ok {
 		return nil, nil

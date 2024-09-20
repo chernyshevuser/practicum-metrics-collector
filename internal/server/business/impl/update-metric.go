@@ -14,7 +14,7 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 	var counterMetrics, gaugeMetrics []storage.Metric
 
 	for _, rm := range rawMetrics {
-		t := s.parseMetricType(rm.Type)
+		t := parseMetricType(rm.Type)
 
 		//case unknown type
 		if t == business.Unknown {

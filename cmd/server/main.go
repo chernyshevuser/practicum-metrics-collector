@@ -13,8 +13,10 @@ import (
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/router"
 	storageimpl "github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage/impl"
 
+	_ "net/http/pprof"
+
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/config"
-	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
+	logger "github.com/chernyshevuser/practicum-metrics-collector/tools/logger/impl"
 	"github.com/gorilla/mux"
 	"golang.org/x/sync/errgroup"
 )
@@ -45,6 +47,7 @@ func main() {
 
 	muxRouter := mux.NewRouter()
 	router.SetupRouter(apiSvc, muxRouter, logger)
+	muxRouter.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 
 	server := http.Server{
 		Addr:    config.Addr,

@@ -9,7 +9,7 @@ import (
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/agent/business/impl"
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/agent/config"
-	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
+	logger "github.com/chernyshevuser/practicum-metrics-collector/tools/logger/impl"
 )
 
 func main() {

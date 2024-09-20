@@ -1,42 +1,41 @@
-package impl
+package impl_test
 
 import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"os/signal"
-	"syscall"
 	"testing"
 
-	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
+	"github.com/golang/mock/gomock"
 	"github.com/test-go/testify/assert"
 
 	businessimpl "github.com/chernyshevuser/practicum-metrics-collector/internal/server/business/impl"
+	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/handler/impl"
 	storageimpl "github.com/chernyshevuser/practicum-metrics-collector/internal/server/storage/impl"
+	mocklogger "github.com/chernyshevuser/practicum-metrics-collector/tools/logger/mock"
 )
 
 func TestUpdateMetric(t *testing.T) {
-	mainCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
-	defer stop()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
-	logger := logger.New()
+	logger := mocklogger.NewMockLogger(ctrl)
 	defer logger.Sync()
 
-	dbSvc, err := storageimpl.New(mainCtx, logger)
+	logger.EXPECT().Info("goodbye from business-svc").Times(1)
+	logger.EXPECT().Info("goodbye from db-svc").Times(1)
+	logger.EXPECT().Sync().Times(1)
+
+	dbSvc, err := storageimpl.New(context.TODO(), logger)
 	if err != nil {
-		logger.Errorw(
-			"cant create db svc",
-			"reason", err,
-		)
-		panic("db initialization failed")
+		t.Errorf("cant create db svc: %v", err)
 	}
 	defer dbSvc.Close()
 
 	businessSvc := businessimpl.New(dbSvc, logger)
 	defer businessSvc.Close()
 
-	svc := New(businessSvc, logger)
+	svc := impl.New(businessSvc, logger)
 
 	type want struct {
 		code        int
