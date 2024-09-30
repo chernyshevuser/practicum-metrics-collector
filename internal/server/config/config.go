@@ -3,18 +3,19 @@ package config
 import (
 	"flag"
 
+	getter "github.com/chernyshevuser/practicum-metrics-collector/tools/config-getter"
 	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 )
 
 type configKey string
 
 const (
-	AddrEnv            = configKey("ADDRESS")
-	StoreIntervalEnv   = configKey("STORE_INTERVAL")
-	FileStoragePathEnv = configKey("FILE_STORAGE_PATH")
-	RestoreEnv         = configKey("RESTORE")
-	DatabaseDsnEnv     = configKey("DATABASE_DSN")
-	HashKeyEnv         = configKey("KEY")
+	AddrEnv            = getter.ConfigKey("ADDRESS")
+	StoreIntervalEnv   = getter.ConfigKey("STORE_INTERVAL")
+	FileStoragePathEnv = getter.ConfigKey("FILE_STORAGE_PATH")
+	RestoreEnv         = getter.ConfigKey("RESTORE")
+	DatabaseDsnEnv     = getter.ConfigKey("DATABASE_DSN")
+	HashKeyEnv         = getter.ConfigKey("KEY")
 )
 
 var (
@@ -36,7 +37,7 @@ func Setup(logger logger.Logger) {
 
 	flag.Parse()
 
-	addr, err := GetConfigString(AddrEnv)
+	addr, err := getter.GetConfigString(AddrEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
@@ -46,7 +47,7 @@ func Setup(logger logger.Logger) {
 		Addr = addr
 	}
 
-	storeInterval, err := GetConfigInt64(StoreIntervalEnv)
+	storeInterval, err := getter.GetConfigInt64(StoreIntervalEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
@@ -56,7 +57,7 @@ func Setup(logger logger.Logger) {
 		StoreInterval = storeInterval
 	}
 
-	fileStoragePath, err := GetConfigString(FileStoragePathEnv)
+	fileStoragePath, err := getter.GetConfigString(FileStoragePathEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
@@ -66,7 +67,7 @@ func Setup(logger logger.Logger) {
 		FileStoragePath = fileStoragePath
 	}
 
-	restore, err := GetConfigBool(RestoreEnv)
+	restore, err := getter.GetConfigBool(RestoreEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
@@ -76,7 +77,7 @@ func Setup(logger logger.Logger) {
 		Restore = restore
 	}
 
-	databaseDsn, err := GetConfigString(DatabaseDsnEnv)
+	databaseDsn, err := getter.GetConfigString(DatabaseDsnEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
@@ -86,7 +87,7 @@ func Setup(logger logger.Logger) {
 		DatabaseDsn = databaseDsn
 	}
 
-	hashKey, err := GetConfigString(HashKeyEnv)
+	hashKey, err := getter.GetConfigString(HashKeyEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",

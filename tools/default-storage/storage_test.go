@@ -7,7 +7,28 @@ import (
 	defaultstorage "github.com/chernyshevuser/practicum-metrics-collector/tools/default-storage"
 )
 
-func TestStorage_SetAndGet(t *testing.T) {
+func TestStorage_Set(t *testing.T) {
+	store := defaultstorage.New[string]()
+
+	key := uint64(1)
+	val := "val"
+	store.Set(key, val)
+
+	received, exists := store.Get(key)
+	if !exists {
+		t.Errorf("expected key '%v' to exist", key)
+	}
+	if received != val {
+		t.Errorf("expected value '%s', got '%v'", val, received)
+	}
+
+	_, exists = store.Get(uint64(2))
+	if exists {
+		t.Error("expected non-existing key to return false for exists")
+	}
+}
+
+func TestStorage_Get(t *testing.T) {
 	store := defaultstorage.New[string]()
 
 	key := uint64(1)
