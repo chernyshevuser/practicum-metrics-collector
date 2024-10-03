@@ -53,7 +53,7 @@ type unit struct {
 
 type sendReq []unit
 
-func (s *svc) sendWithRetry(ctx context.Context, cl *http.Client, metrics []Metric) (err error) {
+func (s *svc) sendWithRetry(ctx context.Context, cl *http.Client, metrics []Metric) error {
 	var req sendReq
 
 	for _, m := range metrics {
@@ -87,14 +87,15 @@ func (s *svc) sendWithRetry(ctx context.Context, cl *http.Client, metrics []Metr
 
 	buf, err := utils.Compress(reqByte)
 	if err != nil {
-		return
+		return err
 	}
 
 	timeouts := []time.Duration{1 * time.Second, 3 * time.Second, 5 * time.Second}
 
 	for attempt := 0; attempt < len(timeouts); attempt++ {
-		err = func() error {
-			req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.addr, buf)
+		if err = func() error {
+			var req *http.Request
+			req, err = http.NewRequestWithContext(ctx, http.MethodPost, s.addr, buf)
 			if err != nil {
 				s.logger.Errorw(
 					"error in creating request",
@@ -112,7 +113,8 @@ func (s *svc) sendWithRetry(ctx context.Context, cl *http.Client, metrics []Metr
 			req.Header.Set("Content-Encoding", "gzip")
 			req.Header.Set("Accept-Encoding", "gzip")
 
-			resp, err := cl.Do(req)
+			var resp *http.Response
+			resp, err = cl.Do(req)
 			if err != nil {
 				s.logger.Errorw(
 					"error in sending request",
@@ -132,22 +134,21 @@ func (s *svc) sendWithRetry(ctx context.Context, cl *http.Client, metrics []Metr
 				}
 			}
 			return err
-		}()
-		if err != nil {
-			if errors.Is(err, context.Canceled) {
-				return err
-			}
-
-			s.logger.Errorw(
-				"error in sending",
-				"reason:", err.Error(),
-				"sleep:", timeouts[attempt],
-			)
-
-			time.Sleep(timeouts[attempt])
-		} else {
-			return
+		}(); err == nil {
+			return nil
 		}
+
+		if errors.Is(err, context.Canceled) {
+			return err
+		}
+
+		s.logger.Errorw(
+			"error in sending",
+			"reason:", err.Error(),
+			"sleep:", timeouts[attempt],
+		)
+
+		time.Sleep(timeouts[attempt])
 	}
 	if err != nil {
 		return err

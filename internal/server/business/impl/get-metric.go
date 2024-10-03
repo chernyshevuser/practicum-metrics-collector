@@ -22,7 +22,8 @@ func (s *svc) GetMetricValue(ctx context.Context, metricType, metricName string)
 
 	//case counter
 	if t == business.Counter {
-		stored, err := s.db.Get(ctx, storage.BuildKey(metricName, string(t)))
+		var stored *storage.Metric
+		stored, err = s.db.Get(ctx, storage.BuildKey(metricName, string(t)))
 		if err != nil {
 			s.logger.Errorw(
 				"storage problem",

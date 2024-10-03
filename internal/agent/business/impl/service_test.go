@@ -116,6 +116,40 @@ func TestCollectMetrics(t *testing.T) {
 	}
 }
 
+func TestCollectExtraMetrics(t *testing.T) {
+	logger := MockLogger{}
+	const (
+		rateLimit = 10
+	)
+	s := &svc{
+		logger: &logger,
+
+		semaphore: semaphoreimpl.New(rateLimit),
+
+		pollCount: decimal.Decimal{},
+		mu:        &sync.Mutex{},
+
+		closeCh: make(chan struct{}, 1),
+		wg:      &sync.WaitGroup{},
+	}
+
+	s.collectExtraMetrics()
+
+	if len(s.metrics) != 0 {
+		t.Errorf("metrics len is invalid")
+	}
+
+	if len(s.extraMetrics) == 0 {
+		t.Errorf("extra metrics len is invalid")
+	}
+
+	for _, metric := range s.extraMetrics {
+		if metric.ID == "PollCount" {
+			t.Errorf("unexpected PollCount metric value: %v", metric.Val)
+		}
+	}
+}
+
 func BenchmarkCollectMetrics(b *testing.B) {
 	logger := MockLogger{}
 	s := &svc{

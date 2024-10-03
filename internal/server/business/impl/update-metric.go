@@ -22,7 +22,8 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 		}
 
 		if t == business.Counter {
-			delta, err := strconv.ParseInt(rm.Value, 10, 64)
+			var delta int64
+			delta, err = strconv.ParseInt(rm.Value, 10, 64)
 			if err != nil {
 				return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't parse counter metric value(%s) to int64, reason: %v", rm.Value, err)
 			}
@@ -35,7 +36,8 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 				},
 			)
 		} else if t == business.Gauge {
-			val, err := strconv.ParseFloat(rm.Value, 64)
+			var val float64
+			val, err = strconv.ParseFloat(rm.Value, 64)
 			if err != nil {
 				return []business.CounterMetric{}, []business.GaugeMetric{}, fmt.Errorf("can't parse gauge metric value(%s) to float64, reason: %v", rm.Value, err)
 			}
@@ -95,7 +97,8 @@ func (s *svc) UpdateMetrics(ctx context.Context, rawMetrics []business.RawMetric
 
 	// increment counter vals
 	for i := range counterMetrics {
-		stored, err := s.db.Get(ctx, storage.BuildKey(counterMetrics[i].ID, counterMetrics[i].Type))
+		var stored *storage.Metric
+		stored, err = s.db.Get(ctx, storage.BuildKey(counterMetrics[i].ID, counterMetrics[i].Type))
 		if err != nil {
 			s.logger.Errorw(
 				"can't get counter metric from db",
