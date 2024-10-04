@@ -5,7 +5,6 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -82,7 +81,7 @@ func TestCompressMiddleware(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create gzip reader: %v", err)
 	}
-	body, _ := ioutil.ReadAll(gzReader)
+	body, _ := io.ReadAll(gzReader)
 
 	if string(body) != "OK" {
 		t.Errorf("expected body 'OK', got '%s'", body)
