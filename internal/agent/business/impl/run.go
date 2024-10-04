@@ -15,8 +15,10 @@ func (s *svc) Run(ctx context.Context) {
 		for {
 			select {
 			case <-s.closeCh:
+				s.logger.Infow("close done")
 				return
 			case <-ctx.Done():
+				s.logger.Infow("ctx done")
 				return
 			case <-updateTicker.C:
 				s.logger.Infow(
@@ -38,8 +40,10 @@ func (s *svc) Run(ctx context.Context) {
 		for {
 			select {
 			case <-s.closeCh:
+				s.logger.Infow("close done")
 				return
 			case <-ctx.Done():
+				s.logger.Infow("ctx done")
 				return
 			case <-updateTicker.C:
 				s.logger.Infow(
@@ -61,8 +65,10 @@ func (s *svc) Run(ctx context.Context) {
 		for {
 			select {
 			case <-s.closeCh:
+				s.logger.Infow("close done")
 				return
 			case <-ctx.Done():
+				s.logger.Infow("ctx done")
 				return
 			case <-sendTicker.C:
 				s.logger.Infow(
