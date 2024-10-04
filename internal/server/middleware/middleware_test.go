@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -109,7 +110,7 @@ func TestDecompressMiddleware(t *testing.T) {
 	resp := w.Result()
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
+	body, _ := io.ReadAll(resp.Body)
 
 	if string(body) != "OK" {
 		t.Errorf("expected body 'OK', got '%s'", body)
