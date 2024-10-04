@@ -22,6 +22,8 @@ import (
 )
 
 func main() {
+	printVersion()
+
 	mainCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
