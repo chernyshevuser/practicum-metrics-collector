@@ -9,14 +9,16 @@ import (
 
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/agent/business/impl"
 	"github.com/chernyshevuser/practicum-metrics-collector/internal/agent/config"
-	logger "github.com/chernyshevuser/practicum-metrics-collector/tools/logger/impl"
+	"go.uber.org/zap"
 )
 
 func main() {
+	printVersion()
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
-	logger := logger.New()
+	logger := zap.Must(zap.NewProductionConfig().Build()).Sugar()
 	defer logger.Sync()
 
 	config.Setup(logger)
@@ -28,6 +30,7 @@ func main() {
 		config.HashKey,
 		fmt.Sprintf("http://%s/updates/", config.Addr),
 		config.RateLimit,
+		config.CryptoKey,
 	)
 	defer agentSvc.Close()
 

@@ -113,3 +113,86 @@ func TestGetMetricValue(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAllMetrics(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	st := mockstorage.NewMockStorage(ctrl)
+	defer st.Close()
+	st.EXPECT().Close().Times(1)
+
+	logger := mocklogger.NewMockLogger(ctrl)
+	defer logger.Sync()
+	logger.EXPECT().Sync().Times(1)
+
+	svc := impl.New(st, logger)
+
+	tests := []struct {
+		name                   string
+		mockSetup              func()
+		expectedCounterMetrics []business.CounterMetric
+		expectedGaugeMetrics   []business.GaugeMetric
+		expectError            bool
+	}{
+		{
+			name: "counter metric exists",
+			mockSetup: func() {
+				st.EXPECT().Lock().Times(1)
+				st.EXPECT().Unlock().Times(1)
+				st.EXPECT().GetAll(gomock.Any()).Return(&[]storage.Metric{{ID: "sample_counter", Type: "counter", Delta: 123}}, nil)
+			},
+			expectedCounterMetrics: []business.CounterMetric{
+				{
+					ID:    "sample_counter",
+					Delta: decimal.NewFromInt(123),
+				},
+			},
+			expectedGaugeMetrics: []business.GaugeMetric{},
+			expectError:          false,
+		},
+		{
+			name: "gauge metric exists",
+			mockSetup: func() {
+				st.EXPECT().Lock().Times(1)
+				st.EXPECT().Unlock().Times(1)
+				st.EXPECT().GetAll(gomock.Any()).Return(&[]storage.Metric{{ID: "sample_gauge", Type: "gauge", Val: 123.45}}, nil)
+			},
+			expectedCounterMetrics: []business.CounterMetric{},
+			expectedGaugeMetrics: []business.GaugeMetric{
+				{
+					ID:    "sample_gauge",
+					Value: decimal.NewFromFloat(123.45),
+				},
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.mockSetup()
+
+			couterMetrics, gaugeMetrics, err := svc.GetAllMetrics(context.TODO())
+
+			if tt.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+
+				assert.Equal(t, len(tt.expectedCounterMetrics), len(couterMetrics))
+				assert.Equal(t, len(tt.expectedGaugeMetrics), len(gaugeMetrics))
+
+				for i := 0; i < len(couterMetrics); i++ {
+					assert.Equal(t, tt.expectedCounterMetrics[i].ID, couterMetrics[i].ID)
+					assert.Equal(t, tt.expectedCounterMetrics[i].Delta.Cmp(couterMetrics[i].Delta), 0)
+				}
+
+				for i := 0; i < len(gaugeMetrics); i++ {
+					assert.Equal(t, tt.expectedGaugeMetrics[i].ID, gaugeMetrics[i].ID)
+					assert.Equal(t, tt.expectedGaugeMetrics[i].Value.Cmp(gaugeMetrics[i].Value), 0)
+				}
+			}
+		})
+	}
+}

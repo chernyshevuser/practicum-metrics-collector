@@ -1,3 +1,3 @@
-# cmd/agent
+**build server with custom flags**
 
-В данной директории будет содержаться код Сервера, который скомпилируется в бинарное приложение
+go build -ldflags "-X main.buildVersion=v0.0.20 -X main.buildDate=04-10-2024 -X main.buildCommit=some_commit" -o server cmd/server/*.go

@@ -3,8 +3,82 @@ package crypto
 import (
 	"testing"
 
-	"github.com/test-go/testify/assert"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestCrypto(t *testing.T) {
+	t.Run("positive: encode, decode, and match source with decoded", func(t *testing.T) {
+		privateKey, publicKey, err := GenerateCrypto()
+		require.NoError(t, err)
+		require.NotEmpty(t, privateKey)
+		require.NotEmpty(t, publicKey)
+
+		sourceMessage := "some_random_phrase123@yandex.ru"
+		encodedMessage, err := Encode(publicKey, sourceMessage)
+		require.NoError(t, err)
+		require.NotEmpty(t, encodedMessage)
+
+		decodedMessage, err := Decode(privateKey, encodedMessage)
+		require.NoError(t, err)
+		require.NotEmpty(t, decodedMessage)
+
+		assert.Equal(t, sourceMessage, decodedMessage)
+	})
+
+	t.Run("negative: private and public key mismatch", func(t *testing.T) {
+		_, publicKey, err := GenerateCrypto()
+		require.NoError(t, err)
+		require.NotEmpty(t, publicKey)
+
+		wrongPrivateKey, _, err := GenerateCrypto()
+		require.NoError(t, err)
+		require.NotEmpty(t, wrongPrivateKey)
+
+		sourceMessage := "some_random_phrase123@yandex.ru"
+		encodedMessage, err := Encode(publicKey, sourceMessage)
+		require.NoError(t, err)
+		require.NotEmpty(t, encodedMessage)
+
+		decodedMessage, err := Decode(wrongPrivateKey, encodedMessage)
+		assert.Error(t, err)
+		assert.Empty(t, decodedMessage)
+		assert.NotEqual(t, sourceMessage, decodedMessage)
+	})
+
+	t.Run("negative: empty public key", func(t *testing.T) {
+		sourceMessage := "some_random_phrase123@yandex.ru"
+		encodedMessage, err := Encode("", sourceMessage)
+		assert.Error(t, err)
+		assert.Empty(t, encodedMessage)
+	})
+
+	t.Run("negative: empty source message", func(t *testing.T) {
+		_, publicKey, err := GenerateCrypto()
+		require.NoError(t, err)
+		require.NotEmpty(t, publicKey)
+
+		sourceMessage := ""
+		encodedMessage, err := Encode(publicKey, sourceMessage)
+		assert.Error(t, err)
+		assert.Empty(t, encodedMessage)
+	})
+
+	t.Run("negative: empty private key", func(t *testing.T) {
+		_, publicKey, err := GenerateCrypto()
+		require.NoError(t, err)
+		require.NotEmpty(t, publicKey)
+
+		sourceMessage := "some_random_phrase123@yandex.ru"
+		encodedMessage, err := Encode(publicKey, sourceMessage)
+		require.NoError(t, err)
+		require.NotEmpty(t, encodedMessage)
+
+		decodedMessage, err := Decode("", encodedMessage)
+		assert.Error(t, err)
+		assert.Empty(t, decodedMessage)
+	})
+}
 
 func TestEncrypt(t *testing.T) {
 	key := "examplekey123456"

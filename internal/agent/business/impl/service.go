@@ -34,9 +34,11 @@ type svc struct {
 	sendInterval   int64
 	addr           string
 	hashKey        string
+
+	cryptoKey string
 }
 
-func New(logger logger.Logger, updateInterval int64, sendInterval int64, hashKey string, addr string, rateLimit int64) business.Agent {
+func New(logger logger.Logger, updateInterval int64, sendInterval int64, hashKey string, addr string, rateLimit int64, cryptoKey string) business.Agent {
 	return &svc{
 		logger: logger,
 
@@ -52,5 +54,6 @@ func New(logger logger.Logger, updateInterval int64, sendInterval int64, hashKey
 		sendInterval:   sendInterval,
 		addr:           addr,
 		hashKey:        hashKey,
+		cryptoKey:      cryptoKey,
 	}
 }

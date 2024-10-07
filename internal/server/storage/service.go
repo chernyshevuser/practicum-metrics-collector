@@ -19,7 +19,7 @@ type Metric struct {
 // It uses a rolling hash algorithm with a prime number to avoid collisions.
 // The resulting hash can be used as a unique identifier for the metric.
 func BuildKey(metricName, metricType string) uint64 {
-	var hash uint64 = 0
+	var hash uint64
 	const (
 		prime uint64 = 31
 		mod   uint64 = 1e9 + 7

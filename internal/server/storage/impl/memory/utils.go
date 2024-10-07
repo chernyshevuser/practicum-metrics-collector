@@ -46,13 +46,13 @@ func (s *svc) Actualize(ctx context.Context) error {
 
 	encoder := json.NewDecoder(file)
 
-	var rawData rawData
+	var rd rawData
 
-	if err = encoder.Decode(&rawData); err != nil {
+	if err = encoder.Decode(&rd); err != nil {
 		return err
 	}
 
-	for _, m := range rawData {
+	for _, m := range rd {
 		err := s.Set(ctx, storage.Metric{
 			ID:    m.ID,
 			Type:  m.Type,
@@ -78,10 +78,10 @@ func (s *svc) Dump(ctx context.Context) error {
 		return nil
 	}
 
-	var rawData rawData
+	var rd rawData
 	for _, m := range *metrics {
-		rawData = append(
-			rawData, struct {
+		rd = append(
+			rd, struct {
 				ID    string  `json:"id"`
 				Type  string  `json:"type"`
 				Val   float64 `json:"val"`
@@ -102,7 +102,7 @@ func (s *svc) Dump(ctx context.Context) error {
 	defer file.Close()
 
 	encoder := json.NewEncoder(file)
-	if err = encoder.Encode(rawData); err != nil {
+	if err = encoder.Encode(rd); err != nil {
 		return fmt.Errorf("can't encode metrics, reason: %v", err)
 	}
 

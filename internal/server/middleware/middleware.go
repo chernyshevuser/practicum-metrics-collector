@@ -1,12 +1,15 @@
 package middleware
 
 import (
+	"bytes"
 	"compress/gzip"
 	"io"
 	"net/http"
 	"runtime/debug"
 	"strings"
 
+	"github.com/chernyshevuser/practicum-metrics-collector/internal/server/config"
+	"github.com/chernyshevuser/practicum-metrics-collector/tools/crypto"
 	sugared "github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 )
 
@@ -108,7 +111,30 @@ func ErrorMiddleware(next func(http.ResponseWriter, *http.Request) error, logger
 	}
 }
 
-func Accept(f func(http.ResponseWriter, *http.Request) error, logger sugared.Logger) http.HandlerFunc {
+func DecodeMiddleware(next http.HandlerFunc, logger sugared.Logger, cryptoKey string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if cryptoKey == "" {
+			next(w, r)
+			return
+		}
+
+		readAll, err := io.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		decode, err := crypto.Decode(config.CryptoKey, string(readAll))
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		r.Body = io.NopCloser(bytes.NewReader([]byte(decode)))
+
+		next(w, r)
+	}
+}
+
+func Accept(f func(http.ResponseWriter, *http.Request) error, logger sugared.Logger, cryptoKey string) http.HandlerFunc {
 	middlewares := []func(next http.HandlerFunc, logger sugared.Logger) http.HandlerFunc{
 		PanicMiddleware,
 		LogMiddleware,
@@ -116,7 +142,7 @@ func Accept(f func(http.ResponseWriter, *http.Request) error, logger sugared.Log
 		CompressMiddleware,
 	}
 
-	prelude := ErrorMiddleware(f, logger)
+	prelude := DecodeMiddleware(ErrorMiddleware(f, logger), logger, cryptoKey)
 
 	for i := range middlewares {
 		prelude = middlewares[i](prelude, logger)
