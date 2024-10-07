@@ -30,6 +30,7 @@ func main() {
 		config.HashKey,
 		fmt.Sprintf("http://%s/updates/", config.Addr),
 		config.RateLimit,
+		config.CryptoKey,
 	)
 	defer agentSvc.Close()
 

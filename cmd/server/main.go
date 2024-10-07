@@ -48,7 +48,7 @@ func main() {
 	apiSvc := api.New(businessSvc, logger)
 
 	muxRouter := mux.NewRouter()
-	router.SetupRouter(apiSvc, muxRouter, logger)
+	router.SetupRouter(apiSvc, muxRouter, logger, config.CryptoKey)
 	muxRouter.PathPrefix("/debug/pprof/").Handler(http.DefaultServeMux)
 
 	server := http.Server{

@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -90,12 +91,23 @@ func (s *svc) sendWithRetry(ctx context.Context, cl *http.Client, metrics []Metr
 		return err
 	}
 
+	var b []byte
+	if s.cryptoKey != "" {
+		encodedBytes, err := crypto.Encode(s.cryptoKey, buf.String())
+		if err != nil {
+			return fmt.Errorf("failed to encode request body: %w", err)
+		}
+		b = []byte(encodedBytes)
+	} else {
+		b = buf.Bytes()
+	}
+
 	timeouts := []time.Duration{1 * time.Second, 3 * time.Second, 5 * time.Second}
 
 	for attempt := 0; attempt < len(timeouts); attempt++ {
 		if err = func() error {
 			var req *http.Request
-			req, err = http.NewRequestWithContext(ctx, http.MethodPost, s.addr, buf)
+			req, err = http.NewRequestWithContext(ctx, http.MethodPost, s.addr, bytes.NewBuffer(b))
 			if err != nil {
 				s.logger.Errorw(
 					"error in creating request",
