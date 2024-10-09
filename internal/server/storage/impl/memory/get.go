@@ -22,10 +22,9 @@ func (s *svc) Get(ctx context.Context, key uint64) (*storage.Metric, error) {
 }
 
 func (s *svc) GetAll(ctx context.Context) (*[]storage.Metric, error) {
-	var res []storage.Metric
-
 	data := s.storage.GetAll()
 
+	res := make([]storage.Metric, 0, len(data))
 	for _, tmp := range data {
 		metric, ok := tmp.(storage.Metric)
 		if !ok {

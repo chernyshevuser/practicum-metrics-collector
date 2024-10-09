@@ -5,57 +5,55 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"io"
 )
 
-// Encrypt encrypts a string using AES.
-func Encrypt(key, text string) (string, error) {
-	block, err := aes.NewCipher([]byte(key))
+// Encrypt encrypts a string using AES with a fixed IV.
+func Encrypt(key, text string, fixedIVStr string) (string, error) {
+	keyBytes := []byte(key)
+	if len(keyBytes) != 16 && len(keyBytes) != 24 && len(keyBytes) != 32 {
+		return "", fmt.Errorf("key length must be 16, 24, or 32 bytes")
+	}
+
+	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
 		return "", err
 	}
 
 	b := []byte(text)
-	ciphertext := make([]byte, aes.BlockSize+len(b))
-	iv := ciphertext[:aes.BlockSize]
+	ciphertext := make([]byte, len(b))
 
-	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-		return "", err
-	}
-
-	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(ciphertext[aes.BlockSize:], b)
+	stream := cipher.NewCFBEncrypter(block, []byte(fixedIVStr))
+	stream.XORKeyStream(ciphertext, b)
 
 	return base64.URLEncoding.EncodeToString(ciphertext), nil
 }
 
-// Decrypt decrypts a string using AES.
-func Decrypt(key, cryptoText string) (string, error) {
+// Decrypt decrypts a string using AES with a fixed IV.
+func Decrypt(key, cryptoText string, fixedIVStr string) (string, error) {
+	keyBytes := []byte(key)
+	if len(keyBytes) != 16 && len(keyBytes) != 24 && len(keyBytes) != 32 {
+		return "", fmt.Errorf("key length must be 16, 24, or 32 bytes")
+	}
+
 	ciphertext, err := base64.URLEncoding.DecodeString(cryptoText)
 	if err != nil {
 		return "", err
 	}
 
-	block, err := aes.NewCipher([]byte(key))
+	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
 		return "", err
 	}
 
-	if len(ciphertext) < aes.BlockSize {
-		return "", fmt.Errorf("ciphertext too short")
-	}
+	plaintext := make([]byte, len(ciphertext))
 
-	iv := ciphertext[:aes.BlockSize]
-	ciphertext = ciphertext[aes.BlockSize:]
+	stream := cipher.NewCFBDecrypter(block, []byte(fixedIVStr))
+	stream.XORKeyStream(plaintext, ciphertext)
 
-	stream := cipher.NewCFBDecrypter(block, iv)
-	stream.XORKeyStream(ciphertext, ciphertext)
-
-	return string(ciphertext), nil
+	return string(plaintext), nil
 }
 
 func Sign(data []byte, key string) []byte {

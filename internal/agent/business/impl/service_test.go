@@ -1,77 +1,32 @@
 package impl
 
 import (
+	"context"
 	"sync"
 	"testing"
+	"time"
 
 	semaphoreimpl "github.com/chernyshevuser/practicum-metrics-collector/internal/agent/business/impl/semaphore/impl"
+	mocklogger "github.com/chernyshevuser/practicum-metrics-collector/tools/logger/mock"
+	"github.com/golang/mock/gomock"
+
 	"github.com/shopspring/decimal"
-	"github.com/test-go/testify/mock"
 )
 
-type MockLogger struct {
-	mock.Mock
-}
-
-func (m *MockLogger) Debugf(format string, args ...interface{}) {
-	m.Called(format, args)
-}
-
-func (m *MockLogger) Infof(format string, args ...interface{}) {
-	m.Called(format, args)
-}
-
-func (m *MockLogger) Warnf(format string, args ...interface{}) {
-	m.Called(format, args)
-}
-
-func (m *MockLogger) Errorf(format string, args ...interface{}) {
-	m.Called(format, args)
-}
-
-func (m *MockLogger) Debugw(msg string, keysAndValues ...interface{}) {
-	m.Called(msg, keysAndValues)
-}
-
-func (m *MockLogger) Infow(msg string, keysAndValues ...interface{}) {
-	m.Called(msg, keysAndValues)
-}
-
-func (m *MockLogger) Warnw(msg string, keysAndValues ...interface{}) {
-	m.Called(msg, keysAndValues)
-}
-
-func (m *MockLogger) Errorw(msg string, keysAndValues ...interface{}) {
-	// m.Called(msg, keysAndValues)
-}
-
-func (m *MockLogger) Debug(args ...interface{}) {
-	m.Called(args)
-}
-
-func (m *MockLogger) Info(args ...interface{}) {
-	m.Called(args)
-}
-
-func (m *MockLogger) Warn(args ...interface{}) {
-	m.Called(args)
-}
-
-func (m *MockLogger) Error(args ...interface{}) {
-	m.Called(args)
-}
-
-func (m *MockLogger) Sync() error {
-	return nil
-}
-
 func TestCollectMetrics(t *testing.T) {
-	logger := MockLogger{}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	logger := mocklogger.NewMockLogger(ctrl)
+	defer logger.Sync()
+	logger.EXPECT().Sync().Times(1)
+
 	const (
 		rateLimit = 10
 	)
+
 	s := &svc{
-		logger: &logger,
+		logger: logger,
 
 		semaphore: semaphoreimpl.New(rateLimit),
 
@@ -116,10 +71,204 @@ func TestCollectMetrics(t *testing.T) {
 	}
 }
 
-func BenchmarkCollectMetrics(b *testing.B) {
-	logger := MockLogger{}
+func TestCollectExtraMetrics(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	logger := mocklogger.NewMockLogger(ctrl)
+	defer logger.Sync()
+	logger.EXPECT().Sync().Times(1)
+
+	const (
+		rateLimit = 10
+	)
 	s := &svc{
-		logger: &logger,
+		logger: logger,
+
+		semaphore: semaphoreimpl.New(rateLimit),
+
+		pollCount: decimal.Decimal{},
+		mu:        &sync.Mutex{},
+
+		closeCh: make(chan struct{}, 1),
+		wg:      &sync.WaitGroup{},
+	}
+
+	s.collectExtraMetrics()
+
+	if len(s.metrics) != 0 {
+		t.Errorf("metrics len is invalid")
+	}
+
+	if len(s.extraMetrics) == 0 {
+		t.Errorf("extra metrics len is invalid")
+	}
+
+	for _, metric := range s.extraMetrics {
+		if metric.ID == "PollCount" {
+			t.Errorf("unexpected PollCount metric value: %v", metric.Val)
+		}
+	}
+}
+
+func TestClose(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	logger := mocklogger.NewMockLogger(ctrl)
+	defer logger.Sync()
+	logger.EXPECT().Sync().Times(1)
+
+	const (
+		rateLimit = 10
+	)
+	s := &svc{
+		logger: logger,
+
+		semaphore: semaphoreimpl.New(rateLimit),
+
+		pollCount: decimal.Decimal{},
+		mu:        &sync.Mutex{},
+
+		closeCh: make(chan struct{}, 1),
+		wg:      &sync.WaitGroup{},
+	}
+
+	logger.EXPECT().Info("goodbye from agent-svc").Times(1)
+	s.Close()
+}
+
+func TestRun_ctx(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	logger := mocklogger.NewMockLogger(ctrl)
+	defer logger.Sync()
+	logger.EXPECT().Sync().Times(1)
+
+	const (
+		rateLimit = 10
+	)
+	s := &svc{
+		logger: logger,
+
+		semaphore: semaphoreimpl.New(rateLimit),
+
+		pollCount: decimal.Decimal{},
+		mu:        &sync.Mutex{},
+
+		closeCh: make(chan struct{}, 1),
+		wg:      &sync.WaitGroup{},
+
+		updateInterval: 100,
+		sendInterval:   100,
+	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 100*time.Millisecond)
+	defer cancel()
+
+	logger.EXPECT().Infow("ctx done").Times(3)
+	s.Run(ctx)
+
+	time.Sleep(time.Second)
+}
+
+func TestRun_close(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	logger := mocklogger.NewMockLogger(ctrl)
+	defer logger.Sync()
+	logger.EXPECT().Sync().Times(1)
+
+	const (
+		rateLimit = 10
+	)
+	s := &svc{
+		logger: logger,
+
+		semaphore: semaphoreimpl.New(rateLimit),
+
+		pollCount: decimal.Decimal{},
+		mu:        &sync.Mutex{},
+
+		closeCh: make(chan struct{}, 1),
+		wg:      &sync.WaitGroup{},
+
+		updateInterval: 100,
+		sendInterval:   100,
+	}
+
+	logger.EXPECT().Info("goodbye from agent-svc").Times(1)
+	logger.EXPECT().Infow("close done").Times(3)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		time.Sleep(300 * time.Millisecond)
+		s.Close()
+	}()
+
+	s.Run(context.TODO())
+
+	wg.Wait()
+}
+func TestRun_collectAllMetrics(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	logger := mocklogger.NewMockLogger(ctrl)
+	defer logger.Sync()
+	logger.EXPECT().Sync().Times(1)
+
+	const (
+		rateLimit = 10
+	)
+	s := &svc{
+		logger: logger,
+
+		semaphore: semaphoreimpl.New(rateLimit),
+
+		pollCount: decimal.Decimal{},
+		mu:        &sync.Mutex{},
+
+		closeCh: make(chan struct{}, 1),
+		wg:      &sync.WaitGroup{},
+
+		updateInterval: 1,
+		sendInterval:   100,
+	}
+
+	logger.EXPECT().Infow("update extra metrics", "status", "start").Times(1)
+	logger.EXPECT().Infow("update extra metrics", "status", "finished").Times(1)
+	logger.EXPECT().Infow("update metrics", "status", "start").Times(1)
+	logger.EXPECT().Infow("update metrics", "status", "finished").Times(1)
+	logger.EXPECT().Info("goodbye from agent-svc").Times(1)
+	logger.EXPECT().Infow("close done").Times(3)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		time.Sleep(2 * time.Second)
+		s.Close()
+	}()
+
+	s.Run(context.TODO())
+
+	wg.Wait()
+}
+
+func BenchmarkCollectMetrics(b *testing.B) {
+	ctrl := gomock.NewController(b)
+	defer ctrl.Finish()
+
+	logger := mocklogger.NewMockLogger(ctrl)
+	defer logger.Sync()
+	logger.EXPECT().Sync().Times(1)
+	s := &svc{
+		logger: logger,
 
 		pollCount: decimal.Decimal{},
 		mu:        &sync.Mutex{},
@@ -136,9 +285,14 @@ func BenchmarkCollectMetrics(b *testing.B) {
 }
 
 func BenchmarkCollectExtraMetrics(b *testing.B) {
-	logger := MockLogger{}
+	ctrl := gomock.NewController(b)
+	defer ctrl.Finish()
+
+	logger := mocklogger.NewMockLogger(ctrl)
+	defer logger.Sync()
+	logger.EXPECT().Sync().Times(1)
 	s := &svc{
-		logger: &logger,
+		logger: logger,
 
 		pollCount: decimal.Decimal{},
 		mu:        &sync.Mutex{},

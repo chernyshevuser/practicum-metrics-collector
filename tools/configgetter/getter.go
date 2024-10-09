@@ -1,4 +1,4 @@
-package config
+package configgetter
 
 import (
 	"fmt"
@@ -6,7 +6,9 @@ import (
 	"strconv"
 )
 
-func GetConfigString(key configKey) (string, error) {
+type ConfigKey string
+
+func GetConfigString(key ConfigKey) (string, error) {
 	val := os.Getenv(string(key))
 	if len(val) == 0 {
 		return "", fmt.Errorf("error in getting %s value", key)
@@ -15,7 +17,7 @@ func GetConfigString(key configKey) (string, error) {
 	return val, nil
 }
 
-func GetConfigInt64(key configKey) (int64, error) {
+func GetConfigInt64(key ConfigKey) (int64, error) {
 	valStr := os.Getenv(string(key))
 	if len(valStr) == 0 {
 		return 0, fmt.Errorf("error in getting %s value", key)
@@ -29,7 +31,7 @@ func GetConfigInt64(key configKey) (int64, error) {
 	return val, nil
 }
 
-func GetConfigFloat64(key configKey) (float64, error) {
+func GetConfigFloat64(key ConfigKey) (float64, error) {
 	valStr := os.Getenv(string(key))
 	if len(valStr) == 0 {
 		return 0, fmt.Errorf("error in getting %s value", key)
@@ -43,7 +45,7 @@ func GetConfigFloat64(key configKey) (float64, error) {
 	return val, nil
 }
 
-func GetConfigBool(key configKey) (bool, error) {
+func GetConfigBool(key ConfigKey) (bool, error) {
 	valStr := os.Getenv(string(key))
 	if len(valStr) == 0 {
 		return false, fmt.Errorf("error in getting %s value", key)
