@@ -1,22 +1,22 @@
-package getter_test
+package configgetter_test
 
 import (
 	"os"
 	"strconv"
 	"testing"
 
-	getter "github.com/chernyshevuser/practicum-metrics-collector/tools/config-getter"
+	"github.com/chernyshevuser/practicum-metrics-collector/tools/configgetter"
 )
 
 func TestGetConfigString(t *testing.T) {
-	key := getter.ConfigKey("TEST_STRING")
+	key := configgetter.ConfigKey("TEST_STRING")
 
 	t.Run("successful string retrieval", func(t *testing.T) {
 		expected := "test_value"
 		os.Setenv(string(key), expected)
 		defer os.Unsetenv(string(key))
 
-		val, err := getter.GetConfigString(key)
+		val, err := configgetter.GetConfigString(key)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -29,7 +29,7 @@ func TestGetConfigString(t *testing.T) {
 	t.Run("empty string should return error", func(t *testing.T) {
 		os.Unsetenv(string(key))
 
-		_, err := getter.GetConfigString(key)
+		_, err := configgetter.GetConfigString(key)
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}
@@ -37,14 +37,14 @@ func TestGetConfigString(t *testing.T) {
 }
 
 func TestGetConfigInt64(t *testing.T) {
-	key := getter.ConfigKey("TEST_INT")
+	key := configgetter.ConfigKey("TEST_INT")
 
 	t.Run("successful int64 retrieval", func(t *testing.T) {
 		expected := int64(123456789)
 		os.Setenv(string(key), strconv.FormatInt(expected, 10))
 		defer os.Unsetenv(string(key))
 
-		val, err := getter.GetConfigInt64(key)
+		val, err := configgetter.GetConfigInt64(key)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -58,7 +58,7 @@ func TestGetConfigInt64(t *testing.T) {
 		os.Setenv(string(key), "invalid_int")
 		defer os.Unsetenv(string(key))
 
-		_, err := getter.GetConfigInt64(key)
+		_, err := configgetter.GetConfigInt64(key)
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}
@@ -67,7 +67,7 @@ func TestGetConfigInt64(t *testing.T) {
 	t.Run("empty int64 should return error", func(t *testing.T) {
 		os.Unsetenv(string(key))
 
-		_, err := getter.GetConfigInt64(key)
+		_, err := configgetter.GetConfigInt64(key)
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}
@@ -75,14 +75,14 @@ func TestGetConfigInt64(t *testing.T) {
 }
 
 func TestGetConfigFloat64(t *testing.T) {
-	key := getter.ConfigKey("TEST_FLOAT")
+	key := configgetter.ConfigKey("TEST_FLOAT")
 
 	t.Run("successful float64 retrieval", func(t *testing.T) {
 		expected := 123.456
 		os.Setenv(string(key), strconv.FormatFloat(expected, 'f', -1, 64))
 		defer os.Unsetenv(string(key))
 
-		val, err := getter.GetConfigFloat64(key)
+		val, err := configgetter.GetConfigFloat64(key)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -96,7 +96,7 @@ func TestGetConfigFloat64(t *testing.T) {
 		os.Setenv(string(key), "invalid_float")
 		defer os.Unsetenv(string(key))
 
-		_, err := getter.GetConfigFloat64(key)
+		_, err := configgetter.GetConfigFloat64(key)
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}
@@ -105,7 +105,7 @@ func TestGetConfigFloat64(t *testing.T) {
 	t.Run("empty float64 should return error", func(t *testing.T) {
 		os.Unsetenv(string(key))
 
-		_, err := getter.GetConfigFloat64(key)
+		_, err := configgetter.GetConfigFloat64(key)
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}
@@ -113,14 +113,14 @@ func TestGetConfigFloat64(t *testing.T) {
 }
 
 func TestGetConfigBool(t *testing.T) {
-	key := getter.ConfigKey("TEST_BOOL")
+	key := configgetter.ConfigKey("TEST_BOOL")
 
 	t.Run("successful bool retrieval", func(t *testing.T) {
 		expected := true
 		os.Setenv(string(key), strconv.FormatBool(expected))
 		defer os.Unsetenv(string(key))
 
-		val, err := getter.GetConfigBool(key)
+		val, err := configgetter.GetConfigBool(key)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -134,7 +134,7 @@ func TestGetConfigBool(t *testing.T) {
 		os.Setenv(string(key), "invalid_bool")
 		defer os.Unsetenv(string(key))
 
-		_, err := getter.GetConfigBool(key)
+		_, err := configgetter.GetConfigBool(key)
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}
@@ -143,7 +143,7 @@ func TestGetConfigBool(t *testing.T) {
 	t.Run("empty bool should return error", func(t *testing.T) {
 		os.Unsetenv(string(key))
 
-		_, err := getter.GetConfigBool(key)
+		_, err := configgetter.GetConfigBool(key)
 		if err == nil {
 			t.Fatal("expected error, got none")
 		}

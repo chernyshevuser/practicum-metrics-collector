@@ -1,10 +1,21 @@
 package noexitmain
 
 import (
+	"go/parser"
+	"go/token"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
+
+func isDetected(src string) bool {
+	file, err := parser.ParseFile(token.NewFileSet(), "", src, 0)
+	if err != nil {
+		panic(err)
+	}
+
+	return DetectExitMain(file) != nil
+}
 
 func TestFindExitMain_Detected(t *testing.T) {
 	{

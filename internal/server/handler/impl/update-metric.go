@@ -166,7 +166,7 @@ func (a *api) UpdateMetricsJSON(w http.ResponseWriter, r *http.Request) error {
 		w.WriteHeader(status)
 	}
 
-	var rawMetrics []business.RawMetric
+	rawMetrics := make([]business.RawMetric, 0, len(req))
 
 	for _, m := range req {
 		metricNameStr := m.ID

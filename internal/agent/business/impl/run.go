@@ -6,7 +6,8 @@ import (
 )
 
 func (s *svc) Run(ctx context.Context) {
-	updateTicker := time.NewTicker(time.Duration(s.updateInterval) * time.Second)
+	updateDefaultTicker := time.NewTicker(time.Duration(s.updateInterval) * time.Second)
+	updateExtraTicker := time.NewTicker(time.Duration(s.updateInterval) * time.Second)
 	sendTicker := time.NewTicker(time.Duration(s.sendInterval) * time.Second)
 
 	s.wg.Add(1)
@@ -20,7 +21,7 @@ func (s *svc) Run(ctx context.Context) {
 			case <-ctx.Done():
 				s.logger.Infow("ctx done")
 				return
-			case <-updateTicker.C:
+			case <-updateDefaultTicker.C:
 				s.logger.Infow(
 					"update metrics",
 					"status", "start",
@@ -45,7 +46,7 @@ func (s *svc) Run(ctx context.Context) {
 			case <-ctx.Done():
 				s.logger.Infow("ctx done")
 				return
-			case <-updateTicker.C:
+			case <-updateExtraTicker.C:
 				s.logger.Infow(
 					"update extra metrics",
 					"status", "start",

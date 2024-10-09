@@ -21,7 +21,7 @@ func (s *svc) Ping(ctx context.Context) error {
 	return nil
 }
 
-type rawData []struct {
+type rawData struct {
 	ID    string  `json:"id"`
 	Type  string  `json:"type"`
 	Val   float64 `json:"val"`
@@ -46,7 +46,7 @@ func (s *svc) Actualize(ctx context.Context) error {
 
 	encoder := json.NewDecoder(file)
 
-	var rd rawData
+	var rd []rawData
 
 	if err = encoder.Decode(&rd); err != nil {
 		return err
@@ -78,15 +78,11 @@ func (s *svc) Dump(ctx context.Context) error {
 		return nil
 	}
 
-	var rd rawData
+	rd := make([]rawData, 0, len(*metrics))
+
 	for _, m := range *metrics {
 		rd = append(
-			rd, struct {
-				ID    string  `json:"id"`
-				Type  string  `json:"type"`
-				Val   float64 `json:"val"`
-				Delta int64   `json:"delta"`
-			}{
+			rd, rawData{
 				ID:    m.ID,
 				Type:  m.Type,
 				Val:   m.Val,

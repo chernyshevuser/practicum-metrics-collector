@@ -2,7 +2,6 @@ package noexitmain
 
 import (
 	"go/ast"
-	"go/parser"
 	"go/token"
 )
 
@@ -44,13 +43,4 @@ func DetectExitMain(node ast.Node) *token.Pos {
 	}
 
 	return pos
-}
-
-func isDetected(src string) bool {
-	file, err := parser.ParseFile(token.NewFileSet(), "", src, 0)
-	if err != nil {
-		panic(err)
-	}
-
-	return DetectExitMain(file) != nil
 }

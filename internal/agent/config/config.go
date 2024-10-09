@@ -3,17 +3,18 @@ package config
 import (
 	"flag"
 
-	getter "github.com/chernyshevuser/practicum-metrics-collector/tools/config-getter"
+	configgetter "github.com/chernyshevuser/practicum-metrics-collector/tools/configgetter"
+
 	"github.com/chernyshevuser/practicum-metrics-collector/tools/logger"
 )
 
 const (
-	AddrEnv           = getter.ConfigKey("ADDRESS")
-	ReportIntervalEnv = getter.ConfigKey("REPORT_INTERVAL")
-	PollIntervalEnv   = getter.ConfigKey("POLL_INTERVAL")
-	HashKeyEnv        = getter.ConfigKey("KEY")
-	RateLimitEnv      = getter.ConfigKey("RATE_LIMIT")
-	FixedIVStrEnv     = getter.ConfigKey("SYPHER")
+	AddrEnv           = configgetter.ConfigKey("ADDRESS")
+	ReportIntervalEnv = configgetter.ConfigKey("REPORT_INTERVAL")
+	PollIntervalEnv   = configgetter.ConfigKey("POLL_INTERVAL")
+	HashKeyEnv        = configgetter.ConfigKey("KEY")
+	RateLimitEnv      = configgetter.ConfigKey("RATE_LIMIT")
+	FixedIVStrEnv     = configgetter.ConfigKey("SYPHER")
 )
 
 var (
@@ -35,7 +36,7 @@ func Setup(logger logger.Logger) {
 
 	flag.Parse()
 
-	addr, err := getter.GetConfigString(AddrEnv)
+	addr, err := configgetter.GetConfigString(AddrEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
@@ -45,7 +46,7 @@ func Setup(logger logger.Logger) {
 		Addr = addr
 	}
 
-	reportInterval, err := getter.GetConfigInt64(ReportIntervalEnv)
+	reportInterval, err := configgetter.GetConfigInt64(ReportIntervalEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
@@ -55,7 +56,7 @@ func Setup(logger logger.Logger) {
 		ReportInterval = reportInterval
 	}
 
-	pollInterval, err := getter.GetConfigInt64(PollIntervalEnv)
+	pollInterval, err := configgetter.GetConfigInt64(PollIntervalEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
@@ -65,7 +66,7 @@ func Setup(logger logger.Logger) {
 		PollInterval = pollInterval
 	}
 
-	hashKey, err := getter.GetConfigString(HashKeyEnv)
+	hashKey, err := configgetter.GetConfigString(HashKeyEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
@@ -75,7 +76,7 @@ func Setup(logger logger.Logger) {
 		HashKey = hashKey
 	}
 
-	rateLimit, err := getter.GetConfigInt64(RateLimitEnv)
+	rateLimit, err := configgetter.GetConfigInt64(RateLimitEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
@@ -85,7 +86,7 @@ func Setup(logger logger.Logger) {
 		RateLimit = rateLimit
 	}
 
-	fixedIVStr, err := getter.GetConfigString(FixedIVStrEnv)
+	fixedIVStr, err := configgetter.GetConfigString(FixedIVStrEnv)
 	if err != nil {
 		logger.Errorw(
 			"can't get env",
